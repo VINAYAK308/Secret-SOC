@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page page--users">
+  <header class="page-header page-header--row">
+    <div class="page-header__lead">
+      <h1 class="page-title">User Management</h1>
+      <p class="page-desc">Create, update, and remove dashboard accounts. Admin access only.</p>
+    </div>
+    <button type="button" id="user-add-btn" class="btn btn--primary">Add user</button>
+  </header>
+
+  <section class="card card--flat">
+    <div id="users-loading" class="loading-state">Loading users…</div>
+    <div id="users-empty" class="empty-state is-hidden">No users found.</div>
+    <div id="users-table-wrap" class="soc-table-wrap is-hidden">
+      <table class="soc-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Created</th>
+            <th class="soc-table__actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<dialog id="user-dialog" class="soc-dialog">
+  <form id="user-form" class="soc-dialog__panel">
+    <header class="soc-dialog__header">
+      <h2 id="user-dialog-title" class="soc-dialog__title">Add user</h2>
+      <button type="button" class="btn btn--icon soc-dialog__close" data-dialog-close aria-label="Close">✕</button>
+    </header>
+    <div class="soc-dialog__body form-stack">
+      <input type="hidden" id="user-id" value="" />
+      <div class="form-field">
+        <label class="form-label" for="user-username">Username</label>
+        <input id="user-username" type="text" class="soc-input" required autocomplete="off" />
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="user-password">
+          <span id="user-password-label">Password</span>
+        </label>
+        <input id="user-password" type="password" class="soc-input" autocomplete="new-password" />
+        <p id="user-password-hint" class="form-hint is-hidden">Leave blank to keep the current password.</p>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="user-role">Role</label>
+        <select id="user-role" class="soc-select" required>
+          <option value="reviewer">Reviewer</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <p id="user-form-error" class="login-error is-hidden" role="alert"></p>
+    </div>
+    <footer class="soc-dialog__footer">
+      <button type="button" class="btn btn--ghost" data-dialog-close>Cancel</button>
+      <button type="submit" class="btn btn--primary" id="user-form-submit">Save</button>
+    </footer>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/users.js"></script>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="page page--dashboard">
+  <header class="page-header page-header--dashboard">
+    <div class="page-header__lead">
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-desc">Overview of secret detections across scanned repositories.</p>
+    </div>
+    <div class="dashboard-filters">
+      {% set filter_prefix = "dashboard" %}
+      {% set filter_show_search = false %}
+      {% include "partials/faceted-filter-toolbar.html" %}
+    </div>
+  </header>
+
+  <div id="dashboard-loading" class="loading-state">Loading dashboard…</div>
+
+  <div id="dashboard-content" class="dashboard-content is-hidden">
+    <div class="stat-grid">
+      <article class="stat-card">
+        <p class="stat-card__label">Total Secrets</p>
+        <p id="stat-total" class="stat-card__value">0</p>
+      </article>
+      <article class="stat-card">
+        <p class="stat-card__label">Critical Exposures</p>
+        <p id="stat-critical" class="stat-card__value">0</p>
+      </article>
+      <article class="stat-card">
+        <p class="stat-card__label">Active Incidents</p>
+        <p id="stat-incidents" class="stat-card__value">0</p>
+      </article>
+      <article class="stat-card">
+        <p class="stat-card__label">Repos Scanned</p>
+        <p id="stat-repos" class="stat-card__value">0</p>
+      </article>
+    </div>
+
+    <section class="card card--flat chart-panel">
+      <header class="card__header">
+        <h3 class="card__title">Detection Trend</h3>
+        <p class="card__subtitle">Secrets detected over time by severity</p>
+      </header>
+      <div id="trend-empty" class="chart-state is-hidden">No trend data for current filters.</div>
+      <div id="trend-chart-wrap" class="chart-panel__canvas">
+        <canvas id="trend-chart"></canvas>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/faceted-filter.js"></script>
+<script src="/static/js/findings-filters.js"></script>
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}

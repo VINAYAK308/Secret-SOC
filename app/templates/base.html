@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secret SOC Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/app.css" />
+  {% block head %}{% endblock %}
+</head>
+<body class="app-body{% block body_class %}{% endblock %}">
+  {% block sidebar %}{% include "partials/sidebar.html" %}{% endblock %}
+  <div id="main-shell" class="main-shell{% block main_shell_class %}{% endblock %}">
+    {% include "partials/navbar.html" %}
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% block overlays %}{% endblock %}
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/utils.js"></script>
+  <script src="/static/js/theme.js"></script>
+  <script src="/static/js/sidebar.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
