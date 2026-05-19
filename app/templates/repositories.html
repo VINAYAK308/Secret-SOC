@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <h1 class="page-title">Repository Management</h1>
+    <p class="page-desc">View all scanned repositories and their total findings.</p>
+  </header>
+
+  <section class="card card--flat">
+    {% set filter_prefix = "repos" %}
+    {% set filter_search_placeholder = "Search repositories…" %}
+    {% include "partials/faceted-filter-toolbar.html" %}
+
+    <p id="repos-count" class="table-footer"></p>
+
+    <div id="repos-loading" class="loading-state">Loading repositories…</div>
+    <div id="repos-empty" class="empty-state is-hidden">No repositories match your filters.</div>
+
+    <div id="repos-table-wrap" class="soc-table-wrap is-hidden">
+      <table class="soc-table">
+        <thead>
+          <tr>
+            <th>Repository</th>
+            <th>Findings</th>
+            <th>Scan status</th>
+            <th>Last Scan</th>
+          </tr>
+        </thead>
+        <tbody id="repos-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/faceted-filter.js"></script>
+<script src="/static/js/repositories.js"></script>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page">
+  <header class="page-header">
+    <h1 class="page-title">Findings</h1>
+  </header>
+
+  <div id="findings-loading" class="card loading-state">Loading findings…</div>
+
+  <section id="findings-table-wrap" class="card card--flat is-hidden">
+    {% set filter_prefix = "findings" %}
+    {% set filter_search_placeholder = "Search findings, repos, or email…" %}
+    {% include "partials/faceted-filter-toolbar.html" %}
+
+    <p id="findings-count" class="table-footer"></p>
+
+    <div class="soc-table-wrap soc-table-wrap--flush">
+      <table class="soc-table">
+        <thead>
+          <tr>
+            <th>Secret Type</th>
+            <th>Repo</th>
+            <th>File Path</th>
+            <th>Severity</th>
+            <th>Workflow Status</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="findings-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block overlays %}
+<aside id="finding-drawer" class="drawer-backdrop is-hidden" aria-hidden="true">
+  <div class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+    <header class="drawer-panel__header">
+      <div class="drawer-panel__header-text">
+        <h2 id="drawer-title" class="drawer-panel__title">Secret Details</h2>
+        <p id="drawer-subtitle" class="drawer-panel__subtitle">Select a row to inspect</p>
+      </div>
+      <button id="drawer-close" type="button" class="btn btn--icon drawer-panel__close" aria-label="Close drawer">✕</button>
+    </header>
+    <div id="drawer-content" class="drawer-panel__body"></div>
+  </div>
+</aside>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/faceted-filter.js"></script>
+<script src="/static/js/findings-filters.js"></script>
+<script src="/static/js/findings.js"></script>
+{% endblock %}

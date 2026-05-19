@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page page--narrow">
+  <header class="page-header">
+    <h1 class="page-title">Trigger Scan</h1>
+    <p class="page-desc">Manually initiate a secrets detection scan on a target repository.</p>
+  </header>
+
+  <section class="card">
+    <form id="scan-form" class="form-stack">
+      <div class="form-field">
+        <label class="form-label" for="repo-url">Repository URL <span class="form-label__required">*</span></label>
+        <input id="repo-url" type="url" class="soc-input" required placeholder="https://github.com/org/repo.git" autocomplete="off" />
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="branches">Target Branches</label>
+        <input id="branches" type="text" class="soc-input" placeholder="main, develop (comma separated)" autocomplete="off" />
+        <p class="form-hint">Leave blank to scan the default branch.</p>
+      </div>
+      <button id="scan-submit" type="submit" class="btn btn--primary">Start Scan</button>
+    </form>
+  </section>
+
+  <div id="scan-status" class="alert is-hidden" role="status">
+    <p id="scan-status-title" class="alert__title"></p>
+    <p id="scan-status-message" class="alert__message"></p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/scan.js"></script>
+{% endblock %}

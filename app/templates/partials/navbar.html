@@ -1,0 +1,22 @@
+<header class="app-header">
+  <div class="app-header__left">
+    <button id="sidebar-toggle" type="button" class="btn btn--icon u-mobile-only" aria-label="Open menu">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/>
+      </svg>
+    </button>
+    {% if show_navbar_brand %}
+    <div class="app-header__brand" aria-label="Secret SOC">
+      <span class="brand-logo" aria-hidden="true">{% include "partials/brand-lock-icon.html" %}</span>
+      <span class="app-header__brand-name">Secret SOC</span>
+    </div>
+    {% endif %}
+  </div>
+  <div class="app-header__right">
+    <button id="theme-toggle" type="button" class="btn btn--ghost" data-theme-toggle aria-label="Switch to light mode">
+      <span id="theme-icon" data-theme-icon aria-hidden="true">☀</span>
+      <span id="theme-label" class="u-desktop-only" data-theme-label>Light mode</span>
+    </button>
+    <button id="logout-btn" type="button" class="btn btn--ghost u-desktop-only">Sign out</button>
+  </div>
+</header>

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page page--alerts">
+  <header class="page-header">
+    <h1 class="page-title">Alert Queue</h1>
+    <p class="page-desc">Findings that need an initial email or a follow-up reminder.</p>
+  </header>
+
+  <div id="alerts-summary" class="stat-grid stat-grid--compact"></div>
+
+  <section class="card">
+    <div id="alerts-loading" class="loading-state">Loading alert queue…</div>
+    <div id="alerts-empty" class="empty-state is-hidden">No alerts pending — nothing needs email right now.</div>
+    <div id="alerts-table-wrap" class="soc-table-wrap is-hidden">
+      <table class="soc-table">
+        <thead>
+          <tr></tr>
+        </thead>
+        <tbody id="alerts-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/alerts.js"></script>
+{% endblock %}
