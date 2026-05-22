@@ -26,6 +26,7 @@ FINDINGS_QUERY = """
         gm.committer_name,
         gm.committer_email,
         gm.branch_name,
+        gm.commit_hash,
         sv.verdict,
         sv.confidence,
         sv.risk_score,
@@ -55,6 +56,7 @@ def _format_finding(item: dict) -> dict:
         "committerName": item.get("committer_name"),
         "committerEmail": item.get("committer_email"),
         "branchName": item.get("branch_name"),
+        "commitHash": item.get("commit_hash"),
         "confidence": item.get("confidence"),
         "filePath": item.get("file_path"),
         "lineNumber": item.get("line_number"),
@@ -109,7 +111,7 @@ def findings_stats():
                 cur.execute(
                     """
                     SELECT COUNT(*) AS count FROM secrets s
-                    WHERE s.secret_status = 'OPEN'
+                    WHERE s.secret_status IN ('OPEN', 'IN_PROGRESS')
                       AND replace(s.file_path, E'\\\\', '/') !~ '(^|/)\\.git(/|$)'
                     """
                 )
@@ -167,6 +169,49 @@ def findings_trend():
     except Exception as exc:
         print("Error fetching trend:", exc)
         raise HTTPException(status_code=500, detail="Failed to fetch trend data") from exc
+
+
+@router.get("/risky-repos", dependencies=[Depends(get_current_user)])
+def risky_repos():
+    query = """
+        SELECT
+            r.name AS repo_name,
+            COUNT(s.id) AS total,
+            COUNT(CASE WHEN sv.risk_score >= 9 THEN 1 END) AS critical,
+            COUNT(CASE WHEN sv.risk_score >= 7 AND sv.risk_score < 9 THEN 1 END) AS high,
+            COUNT(CASE WHEN sv.risk_score >= 4 AND sv.risk_score < 7 THEN 1 END) AS medium,
+            COUNT(CASE WHEN sv.risk_score IS NULL OR sv.risk_score < 4 THEN 1 END) AS low
+        FROM repositories r
+        JOIN secrets s ON s.repo_id = r.id
+        LEFT JOIN secret_validations sv ON sv.secret_id = s.id
+        WHERE s.secret_status IN ('OPEN', 'IN_PROGRESS')
+          AND s.is_active = TRUE
+          AND replace(s.file_path, E'\\\\', '/') !~ '(^|/)\\.git(/|$)'
+        GROUP BY r.name
+        ORDER BY total DESC
+        LIMIT 5
+    """
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(query)
+                rows = cur.fetchall()
+
+        return [
+            {
+                "repoName": r["repo_name"],
+                "total": int(r["total"] or 0),
+                "critical": int(r["critical"] or 0),
+                "high": int(r["high"] or 0),
+                "medium": int(r["medium"] or 0),
+                "low": int(r["low"] or 0),
+            }
+            for r in rows
+        ]
+    except Exception as exc:
+        print("Error fetching risky repositories:", exc)
+        raise HTTPException(status_code=500, detail="Failed to fetch risky repositories") from exc
+
 
 
 @router.get("/{finding_id}/history", dependencies=[Depends(get_current_user)])

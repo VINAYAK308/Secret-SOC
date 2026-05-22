@@ -19,8 +19,10 @@
   const errorEl = document.getElementById("user-form-error");
   const submitBtn = document.getElementById("user-form-submit");
   const currentUserId = SOCAuth.getUser()?.id;
+  const searchInput = document.getElementById("user-search");
 
   let users = [];
+  let searchQuery = "";
 
   document.getElementById("user-add-btn")?.addEventListener("click", () => openDialog());
   document.querySelectorAll("[data-dialog-close]").forEach((btn) => {
@@ -30,6 +32,11 @@
     if (e.target === dialog) closeDialog();
   });
   form?.addEventListener("submit", onSubmit);
+
+  searchInput?.addEventListener("input", (e) => {
+    searchQuery = e.target.value.toLowerCase().trim();
+    renderTable();
+  });
 
   async function load() {
     try {
@@ -50,7 +57,14 @@
   }
 
   function renderTable() {
-    if (!users.length) {
+    const filtered = users.filter((u) => {
+      if (!searchQuery) return true;
+      const usernameMatch = u.username?.toLowerCase().includes(searchQuery);
+      const roleMatch = u.role?.toLowerCase().includes(searchQuery);
+      return usernameMatch || roleMatch;
+    });
+
+    if (!filtered.length) {
       tableWrap.classList.add("is-hidden");
       empty.classList.remove("is-hidden");
       tbody.innerHTML = "";
@@ -59,7 +73,7 @@
     empty.classList.add("is-hidden");
     tableWrap.classList.remove("is-hidden");
 
-    tbody.innerHTML = users
+    tbody.innerHTML = filtered
       .map((u) => {
         const created = u.created_at ? new Date(u.created_at).toLocaleString() : "—";
         const roleBadge =

@@ -38,16 +38,43 @@
       </article>
     </div>
 
-    <section class="card card--flat chart-panel">
-      <header class="card__header">
-        <h3 class="card__title">Detection Trend</h3>
-        <p class="card__subtitle">Secrets detected over time by severity</p>
-      </header>
-      <div id="trend-empty" class="chart-state is-hidden">No trend data for current filters.</div>
-      <div id="trend-chart-wrap" class="chart-panel__canvas">
-        <canvas id="trend-chart"></canvas>
-      </div>
-    </section>
+    <div class="dashboard-charts-grid">
+      <section class="card card--flat chart-panel chart-panel--full">
+        <header class="card__header">
+          <h3 class="card__title">Detection Trend</h3>
+          <p class="card__subtitle">Secrets detected over time by severity</p>
+        </header>
+        <div id="trend-empty" class="chart-state is-hidden">No trend data for current filters.</div>
+        <div id="trend-chart-wrap" class="chart-panel__canvas">
+          <canvas id="trend-chart"></canvas>
+        </div>
+      </section>
+
+      <section class="card card--flat chart-panel">
+        <header class="card__header" style="display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4);">
+          <div>
+            <h3 class="card__title" id="risky-title">Repository Exposure Profile</h3>
+            <p class="card__subtitle" id="risky-subtitle">Top repositories by active secret exposures</p>
+          </div>
+          <button id="risky-reset" class="btn btn--ghost btn--sm is-hidden" style="flex-shrink: 0; padding: var(--space-2) var(--space-3); font-weight: 600; border: 1px solid var(--border);">← Back to Severity</button>
+        </header>
+        <div id="risky-empty" class="chart-state is-hidden">No active secret data.</div>
+        <div id="risky-chart-wrap" class="chart-panel__canvas">
+          <canvas id="risky-chart"></canvas>
+        </div>
+      </section>
+
+      <section class="card card--flat chart-panel">
+        <header class="card__header">
+          <h3 class="card__title">Secret Type Distribution</h3>
+          <p class="card__subtitle">Active secret exposures by type</p>
+        </header>
+        <div id="types-empty" class="chart-state is-hidden">No active secret data.</div>
+        <div id="types-chart-wrap" class="chart-panel__canvas" style="position: relative; height: 320px;">
+          <canvas id="types-chart"></canvas>
+        </div>
+      </section>
+    </div>
   </div>
 </div>
 {% endblock %}

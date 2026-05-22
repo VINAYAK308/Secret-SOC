@@ -1,7 +1,7 @@
 -- =============================================================
 --  Secrets Scanning Pipeline — Database Schema (refined)
 --  Aligned to enriched-findings.json (attribute_secrets.py output)
---  Pipeline: database.py | Dashboard: secret-soc-dashboard-python
+--  Pipeline: finding_cache.py | database.py | Dashboard: secret-soc-dashboard-python
 --
 --  Apply:  psql "$DATABASE_URL" -f schema.sql
 --  Seeds:  psql "$DATABASE_URL" -f ../secret-soc-dashboard-python/seed_users.sql
@@ -281,6 +281,37 @@ CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_role     ON users(role);
 
 -- -------------------------------------------------------------
+-- 9. finding_cache  (Tier-1 cross-scan cache for code_graph + validation)
+--     Fingerprint: SHA256(repo_name | rel_path | line | rule)
+--     Used by: finding_cache.py split / merge / upsert
+-- -------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS finding_cache (
+    fingerprint       TEXT        NOT NULL,
+    repo_name         TEXT        NOT NULL,
+    file_path         TEXT        NOT NULL,   -- repo-relative path
+    line              INTEGER     NOT NULL,
+    rule              TEXT        NOT NULL,
+    tool              TEXT,
+    context_json      JSONB,
+    validation_json   JSONB,
+    finding_json      JSONB,                  -- optional full snapshot
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY (repo_name, fingerprint),
+    CONSTRAINT chk_finding_cache_line CHECK (line > 0)
+);
+
+CREATE INDEX IF NOT EXISTS idx_finding_cache_repo_updated
+    ON finding_cache (repo_name, updated_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_finding_cache_repo_location
+    ON finding_cache (repo_name, file_path, line, rule);
+
+COMMENT ON TABLE finding_cache IS
+    'Cross-scan cache: Tier-1 fingerprint = SHA256(repo|rel_path|line|rule)';
+
+-- -------------------------------------------------------------
 -- Helpers: status change + dashboard view
 -- -------------------------------------------------------------
 CREATE OR REPLACE FUNCTION set_secret_status(
@@ -334,8 +365,11 @@ SELECT
     r.name            AS repo_name,
     r.url             AS repo_url,
     g.branch_name,
+    g.author_name,
     g.author_email,
+    g.committer_name,
     g.committer_email,
+    g.commit_hash,
     v.verdict_legacy,
     v.secret_kind,
     v.reasoning,
@@ -398,4 +432,9 @@ CREATE TRIGGER trg_secret_git_metadata_updated_at
 DROP TRIGGER IF EXISTS trg_secret_validations_updated_at ON secret_validations;
 CREATE TRIGGER trg_secret_validations_updated_at
     BEFORE UPDATE ON secret_validations
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_finding_cache_updated_at ON finding_cache;
+CREATE TRIGGER trg_finding_cache_updated_at
+    BEFORE UPDATE ON finding_cache
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();

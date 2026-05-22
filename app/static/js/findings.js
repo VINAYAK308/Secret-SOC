@@ -150,21 +150,23 @@
   }
 
   function buildGitSection(item) {
+    const authorName = item.authorName || "unknown";
+    const authorEmail = item.authorEmail || "unknown";
+
     const samePerson =
-      item.authorEmail &&
+      authorEmail &&
       item.committerEmail &&
-      item.authorEmail === item.committerEmail &&
+      authorEmail === item.committerEmail &&
       item.authorName === item.committerName;
 
     return drawerRows([
       { label: "branch_name", value: item.branchName, show: Boolean(item.branchName) },
-      { label: "author_name", value: item.authorName, show: Boolean(item.authorName) },
+      { label: "commit_hash", value: item.commitHash, show: Boolean(item.commitHash) },
+      { label: "author_name", value: authorName, show: true },
       {
         label: "author_email",
-        show: Boolean(item.authorEmail),
-        html: item.authorEmail
-          ? `<span class="drawer-kv__value--mono">${escapeHtml(item.authorEmail)}</span>`
-          : null,
+        show: true,
+        html: `<span class="drawer-kv__value--mono">${escapeHtml(authorEmail)}</span>`,
       },
       {
         label: "committer_name",

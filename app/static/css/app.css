@@ -681,7 +681,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  max-width: 80rem;
+  width: 100%;
 }
 
 .page--narrow {
@@ -2397,4 +2397,19 @@ body.page--login .app-header__brand-name {
 
 body.page--login .brand-logo {
   padding: var(--space-3);
+}
+
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+@media (min-width: 1024px) {
+  .dashboard-charts-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .chart-panel--full {
+    grid-column: span 2;
+  }
 }

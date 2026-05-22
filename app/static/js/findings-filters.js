@@ -146,7 +146,7 @@ window.FindingsFilters = {
     return {
       totalSecrets: filtered.length,
       criticalExposures: filtered.filter((f) => f.severity === "Critical").length,
-      activeIncidents: filtered.filter((f) => f.status === "OPEN").length,
+      activeIncidents: filtered.filter((f) => f.status === "OPEN" || f.status === "IN_PROGRESS").length,
       repositoriesScanned: repos.size,
       scannedReposList: [...repos].sort(),
     };
@@ -158,6 +158,7 @@ window.FindingsFilters = {
       repository: new Set(),
       date: new Set(),
       time: new Set(),
+      riskRepoLimit: new Set(),
     };
   },
 
@@ -187,6 +188,17 @@ window.FindingsFilters = {
         label: "Time",
         icon: "clock",
         options: () => [{ value: "24h", label: "Last 24 hours" }],
+      },
+      {
+        id: "riskRepoLimit",
+        label: "Repository limit",
+        icon: "alert",
+        options: () => [
+          { value: "5", label: "Top 5" },
+          { value: "10", label: "Top 10" },
+          { value: "15", label: "Top 15" },
+          { value: "20", label: "Top 20" },
+        ],
       },
     ];
   },
@@ -267,4 +279,43 @@ window.FindingsFilters = {
         ...counts,
       }));
   },
+
+  computeRiskyRepos(filtered, limit = 10) {
+    const repoBuckets = new Map();
+
+    for (const item of filtered) {
+      if ((item.status === "OPEN" || item.status === "IN_PROGRESS") && item.isActive) {
+        const repo = item.repo || "unknown";
+        if (!repoBuckets.has(repo)) {
+          repoBuckets.set(repo, { total: 0, critical: 0, high: 0, medium: 0, low: 0 });
+        }
+        const bucket = repoBuckets.get(repo);
+        bucket.total++;
+        const sev = item.severity || "Low";
+        if (sev === "Critical") bucket.critical++;
+        else if (sev === "High") bucket.high++;
+        else if (sev === "Medium") bucket.medium++;
+        else bucket.low++;
+      }
+    }
+
+    return [...repoBuckets.entries()]
+      .map(([name, counts]) => ({ name, ...counts }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, limit);
+  },
+
+  computeSecretTypes(filtered) {
+    const buckets = {};
+    for (const item of filtered) {
+      if ((item.status === "OPEN" || item.status === "IN_PROGRESS") && item.isActive) {
+        const type = item.secretType || "Unknown Secret";
+        buckets[type] = (buckets[type] || 0) + 1;
+      }
+    }
+    return Object.entries(buckets)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+  },
 };
+

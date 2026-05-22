@@ -24,7 +24,10 @@ QUEUE_QUERY = """
         alert_state,
         last_sent_at,
         alert_count,
-        reasoning
+        reasoning,
+        author_name,
+        committer_name,
+        commit_hash
     FROM v_secrets_alert_queue
     WHERE alert_state IN ('needs_initial', 'needs_reminder')
     ORDER BY
@@ -54,6 +57,9 @@ def _format_queue_row(r: dict) -> dict:
         "last_sent_at": r["last_sent_at"].isoformat() if r.get("last_sent_at") else None,
         "alert_count": int(r["alert_count"]) if r.get("alert_count") is not None else None,
         "reasoning": r.get("reasoning"),
+        "author_name": r.get("author_name"),
+        "committer_name": r.get("committer_name"),
+        "commit_hash": r.get("commit_hash"),
     }
 
 
