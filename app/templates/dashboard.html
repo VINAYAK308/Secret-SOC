@@ -66,6 +66,17 @@
 
       <section class="card card--flat chart-panel">
         <header class="card__header">
+          <h3 class="card__title">Scanning Operations Overview</h3>
+          <p class="card__subtitle">Scans conducted per repository by pipeline status</p>
+        </header>
+        <div id="scans-empty" class="chart-state is-hidden">No scan run data.</div>
+        <div id="scans-chart-wrap" class="chart-panel__canvas">
+          <canvas id="scans-chart"></canvas>
+        </div>
+      </section>
+
+      <section class="card card--flat chart-panel">
+        <header class="card__header">
           <h3 class="card__title">Secret Type Distribution</h3>
           <p class="card__subtitle">Active secret exposures by type</p>
         </header>
@@ -74,12 +85,23 @@
           <canvas id="types-chart"></canvas>
         </div>
       </section>
+
+      <section class="card card--flat chart-panel">
+        <header class="card__header">
+          <h3 class="card__title">Alert Status Distribution</h3>
+          <p class="card__subtitle">Active secret exposures by notification state</p>
+        </header>
+        <div id="alerts-empty" class="chart-state is-hidden">No active alert data.</div>
+        <div id="alerts-chart-wrap" class="chart-panel__canvas" style="position: relative; height: 320px;">
+          <canvas id="alerts-chart"></canvas>
+        </div>
+      </section>
     </div>
   </div>
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="/static/js/faceted-filter.js"></script>
-<script src="/static/js/findings-filters.js"></script>
-<script src="/static/js/dashboard.js"></script>
+<script src="/static/js/faceted-filter.js?v=1.0.1"></script>
+<script src="/static/js/findings-filters.js?v=1.0.1"></script>
+<script src="/static/js/dashboard.js?v=1.0.4"></script>
 {% endblock %}

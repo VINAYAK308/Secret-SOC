@@ -31,11 +31,13 @@ FINDINGS_QUERY = """
         sv.confidence,
         sv.risk_score,
         sv.reasoning,
-        sv.evidence
+        sv.evidence,
+        aq.alert_state
     FROM secrets s
     LEFT JOIN repositories r ON s.repo_id = r.id
     LEFT JOIN secret_git_metadata gm ON gm.secret_id = s.id
     LEFT JOIN secret_validations sv ON sv.secret_id = s.id
+    LEFT JOIN v_secrets_alert_queue aq ON aq.secret_id = s.id
     WHERE replace(s.file_path, E'\\\\', '/') !~ '(^|/)\\.git(/|$)'
     ORDER BY s.created_at DESC
 """
@@ -65,6 +67,7 @@ def _format_finding(item: dict) -> dict:
         "evidence": item.get("evidence"),
         "verdict": item.get("verdict"),
         "isActive": item.get("is_active"),
+        "alertState": item.get("alert_state"),
     }
 
 

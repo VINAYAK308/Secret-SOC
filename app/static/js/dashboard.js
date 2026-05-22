@@ -76,6 +76,7 @@
     renderTrend(filtered);
     renderRiskyRepos(filtered);
     renderSecretTypes(filtered);
+    renderAlerts(filtered);
     facetedFilter.updateFilterUI();
   }
 
@@ -515,6 +516,7 @@
       window.typesChartInstance.destroy();
     }
 
+    const total = data.reduce((sum, d) => sum + d.count, 0);
     const palette = getDoughnutColors(data.length);
 
     window.typesChartInstance = new Chart(canvas, {
@@ -531,6 +533,41 @@
           },
         ],
       },
+      plugins: [
+        {
+          id: "typesCenterText",
+          beforeDraw(chart) {
+            const { ctx } = chart;
+            const meta = chart.getDatasetMeta(0);
+            if (!meta || !meta.data || !meta.data.length) return;
+
+            const firstSlice = meta.data[0];
+            const x = typeof firstSlice.x === "number" ? firstSlice.x : (chart.chartArea.left + chart.chartArea.right) / 2;
+            const y = typeof firstSlice.y === "number" ? firstSlice.y : (chart.chartArea.top + chart.chartArea.bottom) / 2;
+
+            ctx.save();
+
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+
+            const isLight = document.documentElement.classList.contains("light");
+            const valColor = isLight ? "#0f172a" : "#f8fafc";
+            const lblColor = isLight ? "#64748b" : "#94a3b8";
+
+            // Draw Value (Total Count)
+            ctx.font = "bold 26px sans-serif";
+            ctx.fillStyle = valColor;
+            ctx.fillText(total, x, y - 8);
+
+            // Draw Label ("Total Secrets")
+            ctx.font = "600 11px sans-serif";
+            ctx.fillStyle = lblColor;
+            ctx.fillText("Total Secrets", x, y + 14);
+
+            ctx.restore();
+          },
+        },
+      ],
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -562,6 +599,274 @@
         },
       },
     });
+  }
+
+  function renderAlerts(filtered) {
+    const canvas = document.getElementById("alerts-chart");
+    const empty = document.getElementById("alerts-empty");
+    const chartWrap = document.getElementById("alerts-chart-wrap");
+
+    if (!canvas || !empty || !chartWrap) return;
+
+    const colors = getChartColors();
+    const isLight = document.documentElement.classList.contains("light");
+
+    // Aggregate counts
+    let needsInitial = 0;
+    let needsReminder = 0;
+    let mailSent = 0;
+
+    for (const item of filtered) {
+      if (item.alertState === "needs_initial") {
+        needsInitial++;
+      } else if (item.alertState === "needs_reminder") {
+        needsReminder++;
+      } else if (item.alertState === "waiting") {
+        mailSent++;
+      }
+    }
+
+    const data = [];
+    if (needsInitial > 0) data.push({ name: "Need Initial Mail", count: needsInitial, type: "needs_initial" });
+    if (needsReminder > 0) data.push({ name: "Need Reminder", count: needsReminder, type: "needs_reminder" });
+    if (mailSent > 0) data.push({ name: "Mail Sent", count: mailSent, type: "mail_sent" });
+
+    if (!data.length) {
+      chartWrap.classList.add("is-hidden");
+      empty.classList.remove("is-hidden");
+      if (window.alertsChartInstance) {
+        window.alertsChartInstance.destroy();
+        window.alertsChartInstance = null;
+      }
+      return;
+    }
+
+    empty.classList.add("is-hidden");
+    chartWrap.classList.remove("is-hidden");
+
+    if (window.alertsChartInstance) {
+      window.alertsChartInstance.destroy();
+    }
+
+    // Set matching semantic colors based on theme
+    const palette = data.map(d => {
+      if (d.type === "needs_initial") {
+        return isLight 
+          ? { bg: "rgba(245, 158, 11, 0.85)", border: "#d97706" } // Amber
+          : { bg: "rgba(245, 158, 11, 0.55)", border: "#f59e0b" };
+      } else if (d.type === "needs_reminder") {
+        return isLight
+          ? { bg: "rgba(99, 102, 241, 0.85)", border: "#4f46e5" } // Indigo
+          : { bg: "rgba(99, 102, 241, 0.55)", border: "#6366f1" };
+      } else {
+        return isLight
+          ? { bg: "rgba(16, 185, 129, 0.85)", border: "#059669" } // Emerald/Teal/Green
+          : { bg: "rgba(16, 185, 129, 0.55)", border: "#10b981" };
+      }
+    });
+
+    const total = needsInitial + needsReminder + mailSent;
+
+    window.alertsChartInstance = new Chart(canvas, {
+      type: "doughnut",
+      data: {
+        labels: data.map((d) => d.name),
+        datasets: [
+          {
+            data: data.map((d) => d.count),
+            backgroundColor: palette.map((p) => p.bg),
+            borderColor: palette.map((p) => p.border),
+            borderWidth: 1,
+            hoverOffset: 6,
+          },
+        ],
+      },
+      plugins: [
+        {
+          id: "alertsCenterText",
+          beforeDraw(chart) {
+            const { ctx } = chart;
+            const meta = chart.getDatasetMeta(0);
+            if (!meta || !meta.data || !meta.data.length) return;
+
+            // In Chart.js, the center coordinates of the doughnut slices (meta.data[0])
+            // represent the exact mathematical center of the entire doughnut chart hole.
+            const firstSlice = meta.data[0];
+            const x = typeof firstSlice.x === "number" ? firstSlice.x : (chart.chartArea.left + chart.chartArea.right) / 2;
+            const y = typeof firstSlice.y === "number" ? firstSlice.y : (chart.chartArea.top + chart.chartArea.bottom) / 2;
+
+            ctx.save();
+
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+
+            const isLight = document.documentElement.classList.contains("light");
+            const valColor = isLight ? "#0f172a" : "#f8fafc";
+            const lblColor = isLight ? "#64748b" : "#94a3b8";
+
+            // Draw Value (Total Count)
+            ctx.font = "bold 26px sans-serif";
+            ctx.fillStyle = valColor;
+            ctx.fillText(total, x, y - 8);
+
+            // Draw Label ("Total Alerts")
+            ctx.font = "600 11px sans-serif";
+            ctx.fillStyle = lblColor;
+            ctx.fillText("Total Alerts", x, y + 14);
+
+            ctx.restore();
+          },
+        },
+      ],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "60%",
+        animation: {
+          duration: 1200,
+          easing: "easeOutQuart",
+        },
+        plugins: {
+          legend: {
+            position: "right",
+            labels: {
+              color: colors.tick,
+              usePointStyle: true,
+              padding: 12,
+              font: { size: 11 },
+            },
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const n = ctx.parsed;
+                const totalVal = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                const percent = ((n / totalVal) * 100).toFixed(1);
+                return ` ${ctx.label}: ${n} active (${percent}%)`;
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async function fetchAndRenderScanStats() {
+    const canvas = document.getElementById("scans-chart");
+    const empty = document.getElementById("scans-empty");
+    const chartWrap = document.getElementById("scans-chart-wrap");
+
+    if (!canvas || !empty || !chartWrap) return;
+
+    try {
+      const response = await SOCAuth.authFetch("/api/scan/stats");
+      if (!response.ok) throw new Error("Failed to fetch scan stats");
+      const data = await response.json();
+
+      if (!data || !data.length) {
+        chartWrap.classList.add("is-hidden");
+        empty.classList.remove("is-hidden");
+        if (window.scansChartInstance) {
+          window.scansChartInstance.destroy();
+          window.scansChartInstance = null;
+        }
+        return;
+      }
+
+      empty.classList.add("is-hidden");
+      chartWrap.classList.remove("is-hidden");
+
+      if (window.scansChartInstance) {
+        window.scansChartInstance.destroy();
+      }
+
+      const colors = getChartColors();
+      const isLight = document.documentElement.classList.contains("light");
+
+      const labels = data.map(d => d.repoName);
+      const completedData = data.map(d => d.completed);
+      const failedData = data.map(d => d.failed);
+      const runningData = data.map(d => d.running);
+
+      window.scansChartInstance = new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "Completed",
+              data: completedData,
+              backgroundColor: isLight ? "rgba(34, 197, 94, 0.8)" : "rgba(34, 197, 94, 0.45)",
+              borderColor: isLight ? "#16a34a" : "#22c55e",
+              borderWidth: 1,
+              borderRadius: 4,
+            },
+            {
+              label: "Failed",
+              data: failedData,
+              backgroundColor: isLight ? "rgba(239, 68, 68, 0.8)" : "rgba(239, 68, 68, 0.45)",
+              borderColor: isLight ? "#dc2626" : "#ef4444",
+              borderWidth: 1,
+              borderRadius: 4,
+            },
+            {
+              label: "Running",
+              data: runningData,
+              backgroundColor: isLight ? "rgba(245, 158, 11, 0.8)" : "rgba(245, 158, 11, 0.45)",
+              borderColor: isLight ? "#d97706" : "#f59e0b",
+              borderWidth: 1,
+              borderRadius: 4,
+            },
+          ],
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          animation: {
+            duration: 1200,
+            easing: "easeOutQuart",
+          },
+          plugins: {
+            legend: {
+              labels: { color: colors.tick, usePointStyle: true, padding: 16 }
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const n = ctx.parsed.x;
+                  const name = ctx.dataset.label || "";
+                  return `${name}: ${n} scan${n === 1 ? "" : "s"}`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              stacked: true,
+              grid: { color: colors.grid },
+              ticks: { color: colors.tick, precision: 0 },
+              title: {
+                display: true,
+                text: "Scan Runs Count",
+                color: colors.tick,
+                font: { size: 12, weight: "500" },
+              },
+            },
+            y: {
+              stacked: true,
+              grid: { display: false },
+              ticks: { color: colors.tick },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Error rendering scan stats:", error);
+      chartWrap.classList.add("is-hidden");
+      empty.classList.remove("is-hidden");
+    }
   }
 
   function escapeHtml(str) {
@@ -1512,6 +1817,7 @@
       loading.classList.add("is-hidden");
       content.classList.remove("is-hidden");
       refreshDashboard();
+      fetchAndRenderScanStats();
     }
   }
 
@@ -1520,5 +1826,6 @@
 
   window.addEventListener("theme-changed", () => {
     refreshDashboard();
+    fetchAndRenderScanStats();
   });
 })();

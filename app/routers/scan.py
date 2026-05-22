@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.config import get_settings
+from app.database import get_connection
 from app.deps.auth import get_current_user, require_admin
 from app.services.scan_runs import (
     create_scan_run,
@@ -116,3 +117,41 @@ def get_run(scan_run_id: int, _user: dict = Depends(get_current_user)):
         "completedAt": row["completed_at"].isoformat() if row["completed_at"] else None,
         "scannersUsed": row["scanners_used"] or [],
     }
+
+
+@router.get("/stats")
+def get_scan_stats(_user: dict = Depends(get_current_user)):
+    query = """
+        SELECT 
+            r.id,
+            r.name,
+            COUNT(sr.id) FILTER (WHERE sr.status = 'completed') AS completed_scans,
+            COUNT(sr.id) FILTER (WHERE sr.status = 'failed') AS failed_scans,
+            COUNT(sr.id) FILTER (WHERE sr.status = 'running') AS running_scans,
+            COUNT(sr.id) AS total_scans
+        FROM repositories r
+        LEFT JOIN scan_runs sr ON sr.repo_id = r.id
+        GROUP BY r.id, r.name
+        ORDER BY total_scans DESC, r.name ASC
+    """
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(query)
+                rows = cur.fetchall()
+        return [
+            {
+                "id": row["id"],
+                "repoName": row["name"],
+                "completed": int(row["completed_scans"] or 0),
+                "failed": int(row["failed_scans"] or 0),
+                "running": int(row["running_scans"] or 0),
+                "total": int(row["total_scans"] or 0),
+            }
+            for row in rows
+        ]
+    except Exception as exc:
+        print("Error fetching scan stats:", exc)
+        raise HTTPException(
+            status_code=500, detail="Failed to fetch scan stats"
+        ) from exc
