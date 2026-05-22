@@ -554,15 +554,22 @@
             const valColor = isLight ? "#0f172a" : "#f8fafc";
             const lblColor = isLight ? "#64748b" : "#94a3b8";
 
+            // Dynamically scale font size and offsets according to inner radius of the cutout hole
+            const innerRadius = (meta.data[0] && meta.data[0].innerRadius) || 60;
+            const valFontSize = Math.max(14, Math.round(innerRadius * 0.4));
+            const lblFontSize = Math.max(8, Math.round(innerRadius * 0.17));
+            const verticalOffsetVal = Math.round(innerRadius * 0.12);
+            const verticalOffsetLbl = Math.round(innerRadius * 0.22);
+
             // Draw Value (Total Count)
-            ctx.font = "bold 26px sans-serif";
+            ctx.font = `bold ${valFontSize}px sans-serif`;
             ctx.fillStyle = valColor;
-            ctx.fillText(total, x, y - 8);
+            ctx.fillText(total, x, y - verticalOffsetVal);
 
             // Draw Label ("Total Secrets")
-            ctx.font = "600 11px sans-serif";
+            ctx.font = `600 ${lblFontSize}px sans-serif`;
             ctx.fillStyle = lblColor;
-            ctx.fillText("Total Secrets", x, y + 14);
+            ctx.fillText("Total Secrets", x, y + verticalOffsetLbl);
 
             ctx.restore();
           },
@@ -578,11 +585,11 @@
         },
         plugins: {
           legend: {
-            position: "right",
+            position: window.innerWidth < 640 ? "bottom" : "right",
             labels: {
               color: colors.tick,
               usePointStyle: true,
-              padding: 12,
+              padding: window.innerWidth < 640 ? 8 : 12,
               font: { size: 11 },
             },
           },
@@ -704,15 +711,22 @@
             const valColor = isLight ? "#0f172a" : "#f8fafc";
             const lblColor = isLight ? "#64748b" : "#94a3b8";
 
+            // Dynamically scale font size and offsets according to inner radius of the cutout hole
+            const innerRadius = (meta.data[0] && meta.data[0].innerRadius) || 60;
+            const valFontSize = Math.max(14, Math.round(innerRadius * 0.4));
+            const lblFontSize = Math.max(8, Math.round(innerRadius * 0.17));
+            const verticalOffsetVal = Math.round(innerRadius * 0.12);
+            const verticalOffsetLbl = Math.round(innerRadius * 0.22);
+
             // Draw Value (Total Count)
-            ctx.font = "bold 26px sans-serif";
+            ctx.font = `bold ${valFontSize}px sans-serif`;
             ctx.fillStyle = valColor;
-            ctx.fillText(total, x, y - 8);
+            ctx.fillText(total, x, y - verticalOffsetVal);
 
             // Draw Label ("Total Alerts")
-            ctx.font = "600 11px sans-serif";
+            ctx.font = `600 ${lblFontSize}px sans-serif`;
             ctx.fillStyle = lblColor;
-            ctx.fillText("Total Alerts", x, y + 14);
+            ctx.fillText("Total Alerts", x, y + verticalOffsetLbl);
 
             ctx.restore();
           },
@@ -728,11 +742,11 @@
         },
         plugins: {
           legend: {
-            position: "right",
+            position: window.innerWidth < 640 ? "bottom" : "right",
             labels: {
               color: colors.tick,
               usePointStyle: true,
-              padding: 12,
+              padding: window.innerWidth < 640 ? 8 : 12,
               font: { size: 11 },
             },
           },

@@ -161,7 +161,6 @@
 
     return drawerRows([
       { label: "branch_name", value: item.branchName, show: Boolean(item.branchName) },
-      { label: "commit_hash", value: item.commitHash, show: Boolean(item.commitHash) },
       { label: "author_name", value: authorName, show: true },
       {
         label: "author_email",
