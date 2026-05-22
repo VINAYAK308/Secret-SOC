@@ -1,15 +1,131 @@
 {# filter_prefix, filter_search_placeholder (optional), filter_show_search (default true) #}
-<div class="repos-toolbar{% if filter_show_search is defined and not filter_show_search %} repos-toolbar--filters-only{% endif %}">
+<div
+  class="repos-toolbar{% if filter_show_search is defined and not filter_show_search %} repos-toolbar--filters-only{% endif %}">
   {% if filter_show_search is not defined or filter_show_search %}
   <div class="repos-toolbar__search">
-    <svg class="repos-toolbar__search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-    <input id="{{ filter_prefix }}-search" type="search" class="soc-input repos-toolbar__input" placeholder="{{ filter_search_placeholder }}" aria-label="Search" />
+    <svg class="repos-toolbar__search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+    <input id="{{ filter_prefix }}-search" type="search" class="soc-input repos-toolbar__input"
+      placeholder="{{ filter_search_placeholder }}" aria-label="Search" />
+  </div>
+  {% endif %}
+
+  {% if filter_prefix == "findings" %}
+  <div class="filter-panel" id="findings-sort-panel">
+    <button type="button" id="findings-sort-toggle" class="btn btn--ghost filter-panel__trigger" aria-expanded="false"
+      aria-controls="findings-sort-popover">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="m15 18-3 3-3-3" />
+        <path d="m9 6 3-3 3 3" />
+        <path d="M12 3v18" />
+      </svg>
+      <span>Sort</span>
+    </button>
+    <div id="findings-sort-popover" class="filter-popover is-hidden"
+      style="left: 0; top: 110%; width: 220px; min-width: 220px; z-index: 100;">
+      
+      <!-- Primary View: Category List -->
+      <div id="findings-sort-menu" class="filter-popover__view">
+        <ul class="filter-popover__types" style="padding: var(--space-1) 0; list-style: none; margin: 0;">
+          <li style="margin: 0; padding: 0;">
+            <button type="button" data-sort-cat="severity" class="sort-popover__cat-btn filter-popover__type" style="width: 100%; justify-content: space-between; border: none; background: transparent; cursor: pointer; color: var(--text); padding: var(--space-3) var(--space-4); display: flex; align-items: center; transition: background 0.2s;">
+              <span style="display: flex; align-items: center; gap: var(--space-3);">
+                <span class="filter-popover__type-icon" style="display: flex; color: var(--muted);">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
+                </span>
+                <span>Severity</span>
+              </span>
+              <span class="filter-popover__type-chevron" style="color: var(--muted);">›</span>
+            </button>
+          </li>
+          <li style="margin: 0; padding: 0;">
+            <button type="button" data-sort-cat="date" class="sort-popover__cat-btn filter-popover__type" style="width: 100%; justify-content: space-between; border: none; background: transparent; cursor: pointer; color: var(--text); padding: var(--space-3) var(--space-4); display: flex; align-items: center; transition: background 0.2s;">
+              <span style="display: flex; align-items: center; gap: var(--space-3);">
+                <span class="filter-popover__type-icon" style="display: flex; color: var(--muted);">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                </span>
+                <span>Date</span>
+              </span>
+              <span class="filter-popover__type-chevron" style="color: var(--muted);">›</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Detail View: Severity Options -->
+      <div id="findings-sort-detail-severity" class="filter-popover__view is-hidden">
+        <header class="filter-popover__detail-header" style="display: flex; align-items: center; gap: var(--space-2); border-bottom: 1px solid var(--border-subtle); padding: var(--space-2) var(--space-4);">
+          <button type="button" class="sort-popover__back-btn btn btn--icon filter-popover__back" aria-label="Back to sort categories" style="background: transparent; border: none; cursor: pointer; color: var(--text); padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; line-height: 1;">←</button>
+          <span class="filter-popover__detail-icon" style="display: flex; color: var(--muted); align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
+          </span>
+          <span class="filter-popover__detail-title" style="font-weight: 600; font-size: var(--font-sm); color: var(--text);">Severity</span>
+        </header>
+        <ul class="filter-popover__options" style="padding: var(--space-1) 0; list-style: none; margin: 0;">
+          <li style="margin: 0; padding: 0;">
+            <button type="button" data-sort-val="severity_desc" class="sort-popover__option-btn filter-popover__type"
+              style="width: 100%; justify-content: space-between; border: none; background: transparent; cursor: pointer; color: var(--text); padding: var(--space-3) var(--space-4); display: flex; align-items: center; transition: background 0.2s;">
+              <span>Critical to Low</span>
+              <span class="sort-check-icon is-hidden" style="color: var(--accent);">✓</span>
+            </button>
+          </li>
+          <li style="margin: 0; padding: 0;">
+            <button type="button" data-sort-val="severity_asc" class="sort-popover__option-btn filter-popover__type"
+              style="width: 100%; justify-content: space-between; border: none; background: transparent; cursor: pointer; color: var(--text); padding: var(--space-3) var(--space-4); display: flex; align-items: center; transition: background 0.2s;">
+              <span>Low to Critical</span>
+              <span class="sort-check-icon is-hidden" style="color: var(--accent);">✓</span>
+            </button>
+          </li>
+        </ul>
+        <footer class="filter-popover__footer">
+          <button type="button" class="sort-popover__clear-btn btn btn--ghost btn--sm">Clear</button>
+        </footer>
+      </div>
+
+      <!-- Detail View: Date Options -->
+      <div id="findings-sort-detail-date" class="filter-popover__view is-hidden">
+        <header class="filter-popover__detail-header" style="display: flex; align-items: center; gap: var(--space-2); border-bottom: 1px solid var(--border-subtle); padding: var(--space-2) var(--space-4);">
+          <button type="button" class="sort-popover__back-btn btn btn--icon filter-popover__back" aria-label="Back to sort categories" style="background: transparent; border: none; cursor: pointer; color: var(--text); padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; line-height: 1;">←</button>
+          <span class="filter-popover__detail-icon" style="display: flex; color: var(--muted); align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </span>
+          <span class="filter-popover__detail-title" style="font-weight: 600; font-size: var(--font-sm); color: var(--text);">Date</span>
+        </header>
+        <ul class="filter-popover__options" style="padding: var(--space-1) 0; list-style: none; margin: 0;">
+          <li style="margin: 0; padding: 0;">
+            <button type="button" data-sort-val="date_desc" class="sort-popover__option-btn filter-popover__type"
+              style="width: 100%; justify-content: space-between; border: none; background: transparent; cursor: pointer; color: var(--text); padding: var(--space-3) var(--space-4); display: flex; align-items: center; transition: background 0.2s;">
+              <span>Newest First</span>
+              <span class="sort-check-icon is-hidden" style="color: var(--accent);">✓</span>
+            </button>
+          </li>
+          <li style="margin: 0; padding: 0;">
+            <button type="button" data-sort-val="date_asc" class="sort-popover__option-btn filter-popover__type"
+              style="width: 100%; justify-content: space-between; border: none; background: transparent; cursor: pointer; color: var(--text); padding: var(--space-3) var(--space-4); display: flex; align-items: center; transition: background 0.2s;">
+              <span>Oldest First</span>
+              <span class="sort-check-icon is-hidden" style="color: var(--accent);">✓</span>
+            </button>
+          </li>
+        </ul>
+        <footer class="filter-popover__footer">
+          <button type="button" class="sort-popover__clear-btn btn btn--ghost btn--sm">Clear</button>
+        </footer>
+      </div>
+    </div>
   </div>
   {% endif %}
 
   <div class="filter-panel" id="{{ filter_prefix }}-filter-panel">
-    <button type="button" id="{{ filter_prefix }}-filter-toggle" class="btn btn--ghost filter-panel__trigger" aria-expanded="false" aria-controls="{{ filter_prefix }}-filter-popover">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+    <button type="button" id="{{ filter_prefix }}-filter-toggle" class="btn btn--ghost filter-panel__trigger"
+      aria-expanded="false" aria-controls="{{ filter_prefix }}-filter-popover">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+      </svg>
       <span>Filters</span>
       <span id="{{ filter_prefix }}-filter-badge" class="filter-panel__badge is-hidden" aria-hidden="true">0</span>
     </button>
@@ -17,22 +133,34 @@
     <div id="{{ filter_prefix }}-filter-popover" class="filter-popover is-hidden" role="dialog" aria-label="Filters">
       <div id="{{ filter_prefix }}-filter-menu" class="filter-popover__view">
         <div class="filter-popover__search-wrap">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="search" id="{{ filter_prefix }}-filter-type-search" class="filter-popover__search" placeholder="Search filters" autocomplete="off" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input type="search" id="{{ filter_prefix }}-filter-type-search" class="filter-popover__search"
+            placeholder="Search filters" autocomplete="off" />
         </div>
         <ul id="{{ filter_prefix }}-filter-types" class="filter-popover__types"></ul>
       </div>
 
       <div id="{{ filter_prefix }}-filter-detail" class="filter-popover__view is-hidden">
         <header class="filter-popover__detail-header">
-          <button type="button" id="{{ filter_prefix }}-filter-back" class="btn btn--icon filter-popover__back" aria-label="Back to filter list">←</button>
-          <span id="{{ filter_prefix }}-filter-detail-icon" class="filter-popover__detail-icon" aria-hidden="true"></span>
+          <button type="button" id="{{ filter_prefix }}-filter-back" class="btn btn--icon filter-popover__back"
+            aria-label="Back to filter list">←</button>
+          <span id="{{ filter_prefix }}-filter-detail-icon" class="filter-popover__detail-icon"
+            aria-hidden="true"></span>
           <span id="{{ filter_prefix }}-filter-detail-title" class="filter-popover__detail-title">Filter</span>
           <span class="filter-popover__operator">is</span>
         </header>
         <div class="filter-popover__search-wrap">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="search" id="{{ filter_prefix }}-filter-value-search" class="filter-popover__search" placeholder="Search values" autocomplete="off" />
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input type="search" id="{{ filter_prefix }}-filter-value-search" class="filter-popover__search"
+            placeholder="Search values" autocomplete="off" />
         </div>
         <ul id="{{ filter_prefix }}-filter-options" class="filter-popover__options"></ul>
         <footer class="filter-popover__footer">
@@ -45,21 +173,38 @@
 
   {% if filter_prefix == "dashboard" %}
   <div class="export-panel" id="dashboard-export-panel" style="position: relative;">
-    <button type="button" id="dashboard-export-btn" class="btn btn--ghost filter-panel__trigger" aria-expanded="false" aria-controls="dashboard-export-popover" style="height: 100%; min-height: 2.625rem;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <button type="button" id="dashboard-export-btn" class="btn btn--ghost filter-panel__trigger" aria-expanded="false"
+      aria-controls="dashboard-export-popover" style="height: 100%; min-height: 2.625rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </svg>
       <span>Export</span>
     </button>
-    <div id="dashboard-export-popover" class="filter-popover is-hidden" style="right: 0; left: auto; width: 180px; min-width: 180px; top: 110%;">
+    <div id="dashboard-export-popover" class="filter-popover is-hidden"
+      style="right: 0; left: auto; width: 180px; min-width: 180px; top: 110%;">
       <ul class="filter-popover__types" style="padding: var(--space-1) 0; list-style: none;">
         <li style="margin: 0; padding: 0;">
-          <button type="button" id="export-pdf-btn" class="filter-popover__type-btn" style="width: 100%; border: none; background: transparent; text-align: left; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); cursor: pointer; color: var(--foreground); font-size: var(--font-sm); transition: background-color 0.2s;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color: var(--muted);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <button type="button" id="export-pdf-btn" class="filter-popover__type-btn"
+            style="width: 100%; border: none; background: transparent; text-align: left; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); cursor: pointer; color: var(--foreground); font-size: var(--font-sm); transition: background-color 0.2s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" aria-hidden="true" style="color: var(--muted);">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
             <span>PDF Report</span>
           </button>
         </li>
         <li style="margin: 0; padding: 0;">
-          <button type="button" id="export-csv-btn" class="filter-popover__type-btn" style="width: 100%; border: none; background: transparent; text-align: left; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); cursor: pointer; color: var(--foreground); font-size: var(--font-sm); transition: background-color 0.2s;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color: var(--muted);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <button type="button" id="export-csv-btn" class="filter-popover__type-btn"
+            style="width: 100%; border: none; background: transparent; text-align: left; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-4); cursor: pointer; color: var(--foreground); font-size: var(--font-sm); transition: background-color 0.2s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" aria-hidden="true" style="color: var(--muted);">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
             <span>CSV Report</span>
           </button>
         </li>

@@ -23,6 +23,8 @@
 
   let users = [];
   let searchQuery = "";
+  let currentPage = 1;
+  const pageSize = 10;
 
   document.getElementById("user-add-btn")?.addEventListener("click", () => openDialog());
   document.querySelectorAll("[data-dialog-close]").forEach((btn) => {
@@ -35,6 +37,7 @@
 
   searchInput?.addEventListener("input", (e) => {
     searchQuery = e.target.value.toLowerCase().trim();
+    currentPage = 1;
     renderTable();
   });
 
@@ -64,16 +67,30 @@
       return usernameMatch || roleMatch;
     });
 
+    let paginationContainer = document.getElementById("users-pagination");
+
     if (!filtered.length) {
       tableWrap.classList.add("is-hidden");
       empty.classList.remove("is-hidden");
       tbody.innerHTML = "";
+      if (paginationContainer) paginationContainer.innerHTML = "";
       return;
     }
     empty.classList.add("is-hidden");
     tableWrap.classList.remove("is-hidden");
 
-    tbody.innerHTML = filtered
+    if (!paginationContainer) {
+      paginationContainer = document.createElement("div");
+      paginationContainer.id = "users-pagination";
+      tableWrap.appendChild(paginationContainer);
+    }
+
+    const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    tbody.innerHTML = paginated
       .map((u) => {
         const created = u.created_at ? new Date(u.created_at).toLocaleString() : "—";
         const roleBadge =
@@ -102,6 +119,11 @@
     });
     tbody.querySelectorAll("[data-delete]:not([disabled])").forEach((btn) => {
       btn.addEventListener("click", () => deleteUser(Number(btn.dataset.delete)));
+    });
+
+    renderPagination(paginationContainer, filtered.length, currentPage, pageSize, (newPage) => {
+      currentPage = newPage;
+      renderTable();
     });
   }
 

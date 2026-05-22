@@ -8,6 +8,8 @@
 
   let repositories = [];
   let pollTimer = null;
+  let currentPage = 1;
+  const pageSize = 10;
 
   const filters = {
     repositories: new Set(),
@@ -66,10 +68,16 @@
     prefix: "repos",
     filterDefs,
     filters,
-    onChange: render,
+    onChange: () => {
+      currentPage = 1;
+      render();
+    },
   });
 
-  searchInput?.addEventListener("input", render);
+  searchInput?.addEventListener("input", () => {
+    currentPage = 1;
+    render();
+  });
 
   function matchesLastScan(repo, value) {
     if (!repo.lastScanTime) return value === "never";
@@ -135,16 +143,30 @@
     const filtered = getFiltered();
     countEl.textContent = `Showing ${filtered.length} of ${repositories.length} repositories`;
 
+    let paginationContainer = document.getElementById("repos-pagination");
+
     if (!filtered.length) {
       tableWrap.classList.add("is-hidden");
       empty.classList.remove("is-hidden");
+      if (paginationContainer) paginationContainer.innerHTML = "";
       return;
     }
 
     empty.classList.add("is-hidden");
     tableWrap.classList.remove("is-hidden");
 
-    tbody.innerHTML = filtered
+    if (!paginationContainer) {
+      paginationContainer = document.createElement("div");
+      paginationContainer.id = "repos-pagination";
+      tableWrap.appendChild(paginationContainer);
+    }
+
+    const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    tbody.innerHTML = paginated
       .map((repo) => {
         const displayUrl = (repo.url || "").replace("https://github.com/", "");
         const findingsClass =
@@ -166,6 +188,11 @@
           </tr>`;
       })
       .join("");
+
+    renderPagination(paginationContainer, filtered.length, currentPage, pageSize, (newPage) => {
+      currentPage = newPage;
+      render();
+    });
   }
 
   async function load() {

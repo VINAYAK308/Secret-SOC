@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="page">
-  <header class="page-header">
-    <h1 class="page-title">Findings</h1>
-  </header>
 
   <div id="findings-loading" class="card loading-state">Loading findings…</div>
 
@@ -15,7 +12,7 @@
     <p id="findings-count" class="table-footer"></p>
 
     <div class="soc-table-wrap soc-table-wrap--flush">
-      <table class="soc-table">
+      <table class="soc-table soc-table--cards">
         <thead>
           <tr>
             <th>Secret Type</th>
@@ -40,7 +37,8 @@
         <h2 id="drawer-title" class="drawer-panel__title">Secret Details</h2>
         <p id="drawer-subtitle" class="drawer-panel__subtitle">Select a row to inspect</p>
       </div>
-      <button id="drawer-close" type="button" class="btn btn--icon drawer-panel__close" aria-label="Close drawer">✕</button>
+      <button id="drawer-close" type="button" class="btn btn--icon drawer-panel__close"
+        aria-label="Close drawer">✕</button>
     </header>
     <div id="drawer-content" class="drawer-panel__body"></div>
   </div>
@@ -49,5 +47,5 @@
 {% block scripts %}
 <script src="/static/js/faceted-filter.js?v=1.0.1"></script>
 <script src="/static/js/findings-filters.js?v=1.0.1"></script>
-<script src="/static/js/findings.js?v=1.0.1"></script>
+<script src="/static/js/findings.js?v=1.0.15"></script>
 {% endblock %}

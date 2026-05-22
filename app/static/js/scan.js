@@ -5,9 +5,9 @@
   }
 
   const form = document.getElementById("scan-form");
-  const statusBox = document.getElementById("scan-status");
-  const statusTitle = document.getElementById("scan-status-title");
-  const statusMessage = document.getElementById("scan-status-message");
+  const visualizer = document.getElementById("pipeline-visualizer");
+  const stepsList = document.getElementById("pipeline-steps-list");
+  const consoleLog = document.getElementById("pipeline-console-log");
   const submitBtn = document.getElementById("scan-submit");
 
   if (!form) return;
@@ -24,9 +24,13 @@
 
     if (!repoUrl) return;
 
-    setStatus("scanning", "Scan in Progress", "Starting scan pipeline…");
     submitBtn.disabled = true;
     stopPoll();
+
+    // Show visualizer container with queueing status
+    visualizer.classList.remove("is-hidden");
+    consoleLog.textContent = `[INFO] Initializing scan run telemetry pipeline...\n[INFO] Contacting backend to initiate repository registration...`;
+    stepsList.innerHTML = `<div style="text-align: center; padding: var(--space-6); color: var(--muted);"><span class="step-spinner" style="display: inline-block; margin-inline-end: var(--space-2);"></span> Initializing system components...</div>`;
 
     try {
       const res = await SOCAuth.authFetch("/api/scan/trigger", {
@@ -43,14 +47,14 @@
       }
 
       if (data.scanRunId) {
-        setStatus("scanning", "Scan running", data.message || "Pipeline started…");
+        consoleLog.textContent += `\n[OK] Scan run triggered successfully with ID: ${data.scanRunId}\n[INFO] Starting live telemetry monitoring...`;
         pollScanRun(data.scanRunId);
       } else {
-        setStatus("success", "Scan started", data.message || "Scan initiated.");
+        consoleLog.textContent += `\n[WARN] Scan started, but no ScanRunId was returned by backend.`;
         submitBtn.disabled = false;
       }
     } catch (err) {
-      setStatus("error", "Scan Failed", err.message);
+      consoleLog.textContent += `\n[FATAL] Scan Trigger Failed: ${err.message}`;
       submitBtn.disabled = false;
     }
   });
@@ -61,37 +65,92 @@
         const res = await SOCAuth.authFetch(`/api/scan/runs/${scanRunId}`);
         if (!res.ok) throw new Error("Failed to load scan status");
         const run = await res.json();
+
+        // Render pipeline steps
+        renderPipeline(run.stages, run.status);
+
         if (run.status === "running") {
-          setStatus(
-            "scanning",
-            "Scan running",
-            `Scanning ${run.repoName || "repository"}… started ${formatTime(run.startedAt)}`
-          );
           return;
         }
+
+        // Finalized
         stopPoll();
-        if (run.status === "completed") {
-          setStatus(
-            "success",
-            "Scan completed",
-            `${run.repoName || "Repository"} finished at ${formatTime(run.completedAt)}`
-          );
-        } else {
-          setStatus(
-            "error",
-            "Scan failed",
-            `${run.repoName || "Repository"} — status: ${run.status}`
-          );
-        }
+        submitBtn.disabled = false;
       } catch (err) {
         stopPoll();
-        setStatus("error", "Status unavailable", err.message);
-      } finally {
+        consoleLog.textContent += `\n[FATAL] Telemetry Connection Interrupted: ${err.message}`;
         submitBtn.disabled = false;
       }
     };
     tick();
-    pollTimer = setInterval(tick, 3000);
+    pollTimer = setInterval(tick, 2000); // Poll every 2 seconds for high responsiveness
+  }
+
+  function renderPipeline(stages, status) {
+    if (!stages || !stages.length) return;
+
+    let html = "";
+    let logLines = [
+      `[INFO] Telemetry interface connected. Monitoring Scan Run...`,
+      `[INFO] Target Repository Verified: ${document.getElementById("repo-url").value}`
+    ];
+
+    stages.forEach((stg, idx) => {
+      const isCompleted = stg.status === "completed";
+      const isRunning = stg.status === "running";
+      const isFailed = stg.status === "failed";
+      const isPending = stg.status === "pending";
+
+      let classAttr = "pipeline-step";
+      let icon = "";
+
+      if (isCompleted) {
+        classAttr += " pipeline-step--completed";
+        icon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        logLines.push(`[OK] Stage [${stg.name}] completed. Elapsed: ${stg.time || "N/A"}`);
+      } else if (isRunning) {
+        classAttr += " pipeline-step--running";
+        icon = `<span class="step-spinner"></span>`;
+        logLines.push(`[RUNNING] Stage [${stg.name}]: ${stg.desc || "Processing..."}`);
+      } else if (isFailed) {
+        classAttr += " pipeline-step--failed";
+        icon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+        logLines.push(`[FATAL] Stage [${stg.name}] failed! Exception occurred.`);
+      } else {
+        classAttr += " pipeline-step--pending";
+        icon = `<span style="width: 6px; height: 6px; background: var(--border); border-radius: 50%;"></span>`;
+      }
+
+      const badgeText = isCompleted ? (stg.time || "Done") : isRunning ? "Active" : isFailed ? "Failed" : "Pending";
+
+      html += `
+        <div class="${classAttr}">
+          <div class="step-icon-wrap">${icon}</div>
+          <div class="step-content">
+            <h4 class="step-title">${stg.name}</h4>
+            <p class="step-desc">${stg.desc || ""}</p>
+          </div>
+          <div class="step-badge">${badgeText}</div>
+        </div>
+      `;
+    });
+
+    if (status === "completed") {
+      logLines.push(`[OK] Global scanning operation completed successfully.`);
+      document.getElementById("pipeline-title").textContent = "Pipeline Execution Monitor (COMPLETED)";
+      document.getElementById("pipeline-title").style.color = "var(--success)";
+    } else if (status === "failed") {
+      logLines.push(`[FATAL] Global scanning operation execution aborted.`);
+      document.getElementById("pipeline-title").textContent = "Pipeline Execution Monitor (FAILED)";
+      document.getElementById("pipeline-title").style.color = "var(--danger)";
+    } else {
+      document.getElementById("pipeline-title").textContent = "Pipeline Execution Monitor";
+      document.getElementById("pipeline-title").style.color = "var(--text)";
+    }
+
+    stepsList.innerHTML = html;
+    consoleLog.textContent = logLines.join("\n");
+    consoleLog.scrollTop = consoleLog.scrollHeight;
   }
 
   function stopPoll() {
@@ -99,19 +158,5 @@
       clearInterval(pollTimer);
       pollTimer = null;
     }
-  }
-
-  function formatTime(iso) {
-    if (!iso) return "";
-    return new Date(iso).toLocaleString();
-  }
-
-  function setStatus(kind, title, message) {
-    statusBox.classList.remove("is-hidden", "alert--info", "alert--success", "alert--error");
-    statusBox.classList.add(
-      kind === "scanning" ? "alert--info" : kind === "success" ? "alert--success" : "alert--error"
-    );
-    statusTitle.textContent = title;
-    statusMessage.textContent = message;
   }
 })();

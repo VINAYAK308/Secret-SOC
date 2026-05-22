@@ -5,6 +5,10 @@
   const tableWrap = document.getElementById("alerts-table-wrap");
   const tbody = document.getElementById("alerts-tbody");
 
+  let allRows = [];
+  let currentPage = 1;
+  const pageSize = 10;
+
   const TABLE_COLUMNS = [
     { key: "alert_state", label: "alert_state" },
     { key: "secret_id", label: "secret_id" },
@@ -43,11 +47,22 @@
       const queue = await queueRes.json();
       const summary = await summaryRes.json();
       renderSummary(summary);
-      renderTable(queue);
+
+      // Parse status search param and filter rows accordingly
+      const params = new URLSearchParams(window.location.search);
+      const statusParam = params.get("status");
+      let filtered = queue;
+      if (statusParam) {
+        filtered = queue.filter(row => row.alert_state === statusParam);
+      }
+      allRows = filtered;
+      currentPage = 1;
+      renderTable();
     } catch (err) {
       console.error(err);
       renderSummary({ needs_initial: 0, needs_reminder: 0 });
-      renderTable([]);
+      allRows = [];
+      renderTable();
     } finally {
       loading.classList.add("is-hidden");
     }
@@ -66,14 +81,28 @@
       </article>`;
   }
 
-  function renderTable(rows) {
-    if (!rows.length) {
+  function renderTable() {
+    let paginationContainer = document.getElementById("alerts-pagination");
+
+    if (!allRows.length) {
       tableWrap.classList.add("is-hidden");
       empty.classList.remove("is-hidden");
+      if (paginationContainer) paginationContainer.innerHTML = "";
       return;
     }
     empty.classList.add("is-hidden");
     tableWrap.classList.remove("is-hidden");
+
+    if (!paginationContainer) {
+      paginationContainer = document.createElement("div");
+      paginationContainer.id = "alerts-pagination";
+      tableWrap.appendChild(paginationContainer);
+    }
+
+    const totalPages = Math.ceil(allRows.length / pageSize) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const paginated = allRows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     const thead = document.querySelector("#alerts-table-wrap thead tr");
     if (thead) {
@@ -82,7 +111,7 @@
       ).join("");
     }
 
-    tbody.innerHTML = rows
+    tbody.innerHTML = paginated
       .map((row) => {
         const cells = TABLE_COLUMNS.map((col) => {
           const text = cellValue(row, col.key);
@@ -98,6 +127,11 @@
         return `<tr>${cells}</tr>`;
       })
       .join("");
+
+    renderPagination(paginationContainer, allRows.length, currentPage, pageSize, (newPage) => {
+      currentPage = newPage;
+      renderTable();
+    });
   }
 
   load();

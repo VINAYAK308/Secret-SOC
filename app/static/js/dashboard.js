@@ -40,7 +40,7 @@
   function getChartColors() {
     const style = getComputedStyle(document.documentElement);
     return {
-      grid: "color-mix(in srgb, " + (style.getPropertyValue("--muted").trim() || "#94a3b8") + " 25%, transparent)",
+      grid: "color-mix(in srgb, " + (style.getPropertyValue("--muted").trim() || "#94a3b8") + " 8%, transparent)",
       tick: style.getPropertyValue("--muted").trim() || "#94a3b8",
       card: style.getPropertyValue("--card").trim() || "#0f172a",
     };
@@ -178,7 +178,26 @@
         plugins: {
           legend: { labels: { color: colors.tick, usePointStyle: true, padding: 16 } },
           tooltip: {
+            usePointStyle: true,
+            boxPadding: 6,
             callbacks: {
+              labelPointStyle: (ctx) => {
+                return {
+                  pointStyle: "circle",
+                  rotation: 0
+                };
+              },
+              labelColor: (ctx) => {
+                let bg = ctx.dataset.backgroundColor;
+                let border = ctx.dataset.borderColor;
+                if (Array.isArray(bg)) bg = bg[ctx.dataIndex];
+                if (Array.isArray(border)) border = border[ctx.dataIndex];
+                return {
+                  borderColor: border || "#3b82f6",
+                  backgroundColor: bg || border || "#3b82f6",
+                  borderWidth: 2,
+                };
+              },
               label: (ctx) => {
                 const n = ctx.parsed.y;
                 const name = ctx.dataset.label || "Secrets";
@@ -233,7 +252,7 @@
 
     if (drilldownState) {
       // 1. Filter findings for this repository & severity
-      const repoFiltered = filtered.filter(item => 
+      const repoFiltered = filtered.filter(item =>
         item.repo === drilldownState.repo &&
         item.severity === drilldownState.severity &&
         (item.status === "OPEN" || item.status === "IN_PROGRESS") &&
@@ -294,7 +313,7 @@
           ]
         },
         options: {
-          indexAxis: "x",
+          indexAxis: "y",
           responsive: true,
           maintainAspectRatio: false,
           animation: {
@@ -304,9 +323,28 @@
           plugins: {
             legend: { display: false },
             tooltip: {
+              usePointStyle: true,
+              boxPadding: 6,
               callbacks: {
+                labelPointStyle: (ctx) => {
+                  return {
+                    pointStyle: "circle",
+                    rotation: 0
+                  };
+                },
+                labelColor: (ctx) => {
+                  let bg = ctx.dataset.backgroundColor;
+                  let border = ctx.dataset.borderColor;
+                  if (Array.isArray(bg)) bg = bg[ctx.dataIndex];
+                  if (Array.isArray(border)) border = border[ctx.dataIndex];
+                  return {
+                    borderColor: border || "#3b82f6",
+                    backgroundColor: bg || border || "#3b82f6",
+                    borderWidth: 2,
+                  };
+                },
                 label: (ctx) => {
-                  const n = ctx.parsed.y;
+                  const n = ctx.parsed.x;
                   return `${ctx.label}: ${n} active exposure${n === 1 ? "" : "s"}`;
                 },
               },
@@ -314,10 +352,6 @@
           },
           scales: {
             x: {
-              grid: { display: false },
-              ticks: { color: colors.tick },
-            },
-            y: {
               title: {
                 display: true,
                 text: "Active Exposures",
@@ -325,7 +359,11 @@
                 font: { size: 12, weight: "500" },
               },
               grid: { color: colors.grid },
-              ticks: { color: colors.tick, precision: 0, stepSize: 1 },
+              ticks: { color: colors.tick, precision: 0 },
+            },
+            y: {
+              grid: { display: false },
+              ticks: { color: colors.tick },
             },
           },
         }
@@ -399,7 +437,7 @@
           ],
         },
         options: {
-          indexAxis: "x",
+          indexAxis: "y",
           responsive: true,
           maintainAspectRatio: false,
           interaction: { mode: "index", intersect: false },
@@ -425,9 +463,28 @@
           plugins: {
             legend: { labels: { color: colors.tick, usePointStyle: true, padding: 16 } },
             tooltip: {
+              usePointStyle: true,
+              boxPadding: 6,
               callbacks: {
+                labelPointStyle: (ctx) => {
+                  return {
+                    pointStyle: "circle",
+                    rotation: 0
+                  };
+                },
+                labelColor: (ctx) => {
+                  let bg = ctx.dataset.backgroundColor;
+                  let border = ctx.dataset.borderColor;
+                  if (Array.isArray(bg)) bg = bg[ctx.dataIndex];
+                  if (Array.isArray(border)) border = border[ctx.dataIndex];
+                  return {
+                    borderColor: border || "#3b82f6",
+                    backgroundColor: bg || border || "#3b82f6",
+                    borderWidth: 2,
+                  };
+                },
                 label: (ctx) => {
-                  const n = ctx.parsed.y;
+                  const n = ctx.parsed.x;
                   const name = ctx.dataset.label || "";
                   return `${name}: ${n} active exposure${n === 1 ? "" : "s"}`;
                 },
@@ -437,11 +494,6 @@
           scales: {
             x: {
               stacked: true,
-              grid: { display: false },
-              ticks: { color: colors.tick },
-            },
-            y: {
-              stacked: true,
               title: {
                 display: true,
                 text: "Active Exposures",
@@ -449,7 +501,12 @@
                 font: { size: 12, weight: "500" },
               },
               grid: { color: colors.grid },
-              ticks: { color: colors.tick, precision: 0, stepSize: 1 },
+              ticks: { color: colors.tick, precision: 0 },
+            },
+            y: {
+              stacked: true,
+              grid: { display: false },
+              ticks: { color: colors.tick },
             },
           },
         },
@@ -470,7 +527,7 @@
       { bg: "rgba(99, 102, 241, 0.55)", border: "#6366f1" },  // Indigo
       { bg: "rgba(239, 68, 68, 0.55)", border: "#ef4444" },   // Red
     ];
-    
+
     const colorsLight = [
       { bg: "rgba(59, 130, 246, 0.8)", border: "#2563eb" },
       { bg: "rgba(139, 92, 246, 0.8)", border: "#7c3aed" },
@@ -483,7 +540,7 @@
     ];
 
     const activePalette = isLight ? colorsLight : colors;
-    
+
     const result = [];
     for (let i = 0; i < count; i++) {
       result.push(activePalette[i % activePalette.length]);
@@ -583,6 +640,17 @@
           duration: 1200,
           easing: "easeOutQuart",
         },
+        onHover: (event, activeElements) => {
+          event.chart.canvas.style.cursor = activeElements.length ? "pointer" : "default";
+        },
+        onClick: (event, activeElements, chart) => {
+          const active = chart.getElementsAtEventForMode(event.native || event, 'nearest', { intersect: true }, true);
+          if (active && active.length > 0) {
+            const first = active[0];
+            const label = chart.data.labels[first.index];
+            window.location.href = `/findings?search=${encodeURIComponent(label)}`;
+          }
+        },
         plugins: {
           legend: {
             position: window.innerWidth < 640 ? "bottom" : "right",
@@ -594,7 +662,26 @@
             },
           },
           tooltip: {
+            usePointStyle: true,
+            boxPadding: 6,
             callbacks: {
+              labelPointStyle: (ctx) => {
+                return {
+                  pointStyle: "circle",
+                  rotation: 0
+                };
+              },
+              labelColor: (ctx) => {
+                let bg = ctx.dataset.backgroundColor;
+                let border = ctx.dataset.borderColor;
+                if (Array.isArray(bg)) bg = bg[ctx.dataIndex];
+                if (Array.isArray(border)) border = border[ctx.dataIndex];
+                return {
+                  borderColor: border || "#3b82f6",
+                  backgroundColor: bg || border || "#3b82f6",
+                  borderWidth: 2,
+                };
+              },
               label: (ctx) => {
                 const n = ctx.parsed;
                 const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
@@ -658,9 +745,9 @@
     // Set matching semantic colors based on theme
     const palette = data.map(d => {
       if (d.type === "needs_initial") {
-        return isLight 
-          ? { bg: "rgba(245, 158, 11, 0.85)", border: "#d97706" } // Amber
-          : { bg: "rgba(245, 158, 11, 0.55)", border: "#f59e0b" };
+        return isLight
+          ? { bg: "rgba(6, 182, 212, 0.85)", border: "#0891b2" } // Cyan
+          : { bg: "rgba(6, 182, 212, 0.55)", border: "#06b6d4" };
       } else if (d.type === "needs_reminder") {
         return isLight
           ? { bg: "rgba(99, 102, 241, 0.85)", border: "#4f46e5" } // Indigo
@@ -740,6 +827,24 @@
           duration: 1200,
           easing: "easeOutQuart",
         },
+        onHover: (event, activeElements) => {
+          event.chart.canvas.style.cursor = activeElements.length ? "pointer" : "default";
+        },
+        onClick: (event, activeElements, chart) => {
+          const active = chart.getElementsAtEventForMode(event.native || event, 'nearest', { intersect: true }, true);
+          if (active && active.length > 0) {
+            const first = active[0];
+            const label = chart.data.labels[first.index];
+            let stateVal = "";
+            if (label === "Need Initial Mail") stateVal = "needs_initial";
+            else if (label === "Need Reminder") stateVal = "needs_reminder";
+            else if (label === "Mail Sent") stateVal = "waiting";
+
+            if (stateVal) {
+              window.location.href = `/alerts?status=${stateVal}`;
+            }
+          }
+        },
         plugins: {
           legend: {
             position: window.innerWidth < 640 ? "bottom" : "right",
@@ -751,7 +856,26 @@
             },
           },
           tooltip: {
+            usePointStyle: true,
+            boxPadding: 6,
             callbacks: {
+              labelPointStyle: (ctx) => {
+                return {
+                  pointStyle: "circle",
+                  rotation: 0
+                };
+              },
+              labelColor: (ctx) => {
+                let bg = ctx.dataset.backgroundColor;
+                let border = ctx.dataset.borderColor;
+                if (Array.isArray(bg)) bg = bg[ctx.dataIndex];
+                if (Array.isArray(border)) border = border[ctx.dataIndex];
+                return {
+                  borderColor: border || "#3b82f6",
+                  backgroundColor: bg || border || "#3b82f6",
+                  borderWidth: 2,
+                };
+              },
               label: (ctx) => {
                 const n = ctx.parsed;
                 const totalVal = ctx.dataset.data.reduce((a, b) => a + b, 0);
@@ -847,7 +971,26 @@
               labels: { color: colors.tick, usePointStyle: true, padding: 16 }
             },
             tooltip: {
+              usePointStyle: true,
+              boxPadding: 6,
               callbacks: {
+                labelPointStyle: (ctx) => {
+                  return {
+                    pointStyle: "circle",
+                    rotation: 0
+                  };
+                },
+                labelColor: (ctx) => {
+                  let bg = ctx.dataset.backgroundColor;
+                  let border = ctx.dataset.borderColor;
+                  if (Array.isArray(bg)) bg = bg[ctx.dataIndex];
+                  if (Array.isArray(border)) border = border[ctx.dataIndex];
+                  return {
+                    borderColor: border || "#3b82f6",
+                    backgroundColor: bg || border || "#3b82f6",
+                    borderWidth: 2,
+                  };
+                },
                 label: (ctx) => {
                   const n = ctx.parsed.x;
                   const name = ctx.dataset.label || "";
@@ -978,7 +1121,7 @@
     }
     const filtered = getFiltered();
     const stats = FindingsFilters.computeStats(filtered);
-    
+
     // Compute filter text
     const repoFilterText = filters.repository.size ? [...filters.repository].join(", ") : "All Repositories";
     const dateFilterText = filters.date.size ? [...filters.date].map(v => v === "7d" ? "Last 7 days" : v === "30d" ? "Last 30 days" : "Older than 30 days").join(", ") : "Any Time";
@@ -1041,7 +1184,7 @@
         const highPct = ((r.high / t) * 100).toFixed(1);
         const medPct = ((r.medium / t) * 100).toFixed(1);
         const lowPct = ((r.low / t) * 100).toFixed(1);
-        
+
         return `
           <tr>
             <td><strong>${escapeHtml(r.name)}</strong></td>
@@ -1075,7 +1218,7 @@
         const fp = item.filePath || "";
         const shortPath = fp.length > 50 ? fp.substring(0, 47) + "..." : fp;
         const sevClass = `badge--${item.severity ? item.severity.toLowerCase() : "low"}`;
-        
+
         let statusClass = "badge--open";
         if (item.status === "IN_PROGRESS") statusClass = "badge--progress";
         else if (item.status === "RESOLVED") statusClass = "badge--resolved";
@@ -1495,7 +1638,7 @@
   function injectModalStyles() {
     const styleId = "soc-export-modal-styles";
     if (document.getElementById(styleId)) return;
-    
+
     const style = document.createElement("style");
     style.id = styleId;
     style.innerHTML = `
@@ -1661,18 +1804,18 @@
 
   function showExportModal(type, onComplete) {
     injectModalStyles();
-    
+
     const oldOverlay = document.querySelector(".soc-export-modal-overlay");
     if (oldOverlay) oldOverlay.remove();
-    
+
     const overlay = document.createElement("div");
     overlay.className = "soc-export-modal-overlay";
-    
+
     const spinnerSvg = `<svg class="soc-spin" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>`;
     const checkSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
-    
+
     const primaryLabel = type === "CSV" ? "Download CSV" : "Open Print Dialog";
-    
+
     overlay.innerHTML = `
       <div class="soc-export-modal">
         <div class="soc-export-modal__icon-wrap">
@@ -1692,11 +1835,11 @@
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(overlay);
-    
+
     setTimeout(() => overlay.classList.add("is-visible"), 10);
-    
+
     const progressBar = overlay.querySelector(".soc-export-modal__progress-bar");
     const percentLabel = overlay.querySelector(".soc-export-modal__percentage");
     const title = overlay.querySelector(".soc-export-modal__title");
@@ -1704,18 +1847,18 @@
     const iconWrap = overlay.querySelector(".soc-export-modal__icon-wrap");
     const primaryBtn = overlay.querySelector("#soc-export-primary-btn");
     const secondaryBtn = overlay.querySelector("#soc-export-secondary-btn");
-    
+
     let pct = 0;
     const duration = 1200;
     const step = 30;
     const increment = (step / duration) * 100;
-    
+
     const timer = setInterval(() => {
       pct += increment;
       if (pct >= 100) {
         pct = 100;
         clearInterval(timer);
-        
+
         progressBar.style.width = "100%";
         progressBar.classList.add("is-success");
         percentLabel.textContent = "100%";
@@ -1724,10 +1867,10 @@
         iconWrap.classList.add("is-success");
         title.textContent = `${type} Report Ready`;
         desc.textContent = "The report has been successfully generated and compiled.";
-        
+
         primaryBtn.classList.add("is-visible");
         secondaryBtn.classList.add("is-visible");
-        
+
         primaryBtn.addEventListener("click", () => {
           try {
             onComplete();
@@ -1735,24 +1878,24 @@
             setTimeout(() => overlay.remove(), 300);
           } catch (err) {
             console.error("Export callback failed:", err);
-            
+
             progressBar.style.width = "100%";
             progressBar.classList.remove("is-success");
             progressBar.style.background = "#ef4444";
-            
+
             percentLabel.textContent = "Error";
             percentLabel.style.color = "#ef4444";
-            
+
             iconWrap.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
             iconWrap.classList.remove("is-success");
-            
+
             title.textContent = `${type} Export Failed`;
             desc.textContent = "An error occurred while compiling the report: " + (err.message || err);
-            
+
             primaryBtn.classList.remove("is-visible");
           }
         });
-        
+
         secondaryBtn.addEventListener("click", () => {
           overlay.classList.remove("is-visible");
           setTimeout(() => overlay.remove(), 300);
@@ -1835,7 +1978,38 @@
     }
   }
 
+  function setupStatCards() {
+    const totalCard = document.getElementById("stat-total")?.closest(".stat-card");
+    if (totalCard) {
+      totalCard.addEventListener("click", () => {
+        window.location.href = "/findings";
+      });
+    }
+
+    const criticalCard = document.getElementById("stat-critical")?.closest(".stat-card");
+    if (criticalCard) {
+      criticalCard.addEventListener("click", () => {
+        window.location.href = "/findings?severity=Critical";
+      });
+    }
+
+    const incidentsCard = document.getElementById("stat-incidents")?.closest(".stat-card");
+    if (incidentsCard) {
+      incidentsCard.addEventListener("click", () => {
+        window.location.href = "/findings?status=OPEN,IN_PROGRESS";
+      });
+    }
+
+    const reposCard = document.getElementById("stat-repos")?.closest(".stat-card");
+    if (reposCard) {
+      reposCard.addEventListener("click", () => {
+        window.location.href = "/repositories";
+      });
+    }
+  }
+
   setupExport();
+  setupStatCards();
   load();
 
   window.addEventListener("theme-changed", () => {

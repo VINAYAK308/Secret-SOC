@@ -20,19 +20,19 @@
 
   <div id="dashboard-content" class="dashboard-content is-hidden">
     <div class="stat-grid">
-      <article class="stat-card">
+      <article class="stat-card stat-card--total">
         <p class="stat-card__label">Total Secrets</p>
         <p id="stat-total" class="stat-card__value">0</p>
       </article>
-      <article class="stat-card">
+      <article class="stat-card stat-card--critical">
         <p class="stat-card__label">Critical Exposures</p>
         <p id="stat-critical" class="stat-card__value">0</p>
       </article>
-      <article class="stat-card">
+      <article class="stat-card stat-card--incidents">
         <p class="stat-card__label">Active Incidents</p>
         <p id="stat-incidents" class="stat-card__value">0</p>
       </article>
-      <article class="stat-card">
+      <article class="stat-card stat-card--repos">
         <p class="stat-card__label">Repos Scanned</p>
         <p id="stat-repos" class="stat-card__value">0</p>
       </article>
@@ -51,12 +51,26 @@
       </section>
 
       <section class="card card--flat chart-panel">
-        <header class="card__header" style="display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4);">
+        <header class="card__header">
+          <h3 class="card__title">Secret Type Distribution</h3>
+          <p class="card__subtitle">Active secret exposures by type</p>
+        </header>
+        <div id="types-empty" class="chart-state is-hidden">No active secret data.</div>
+        <div id="types-chart-wrap" class="chart-panel__canvas" style="position: relative; height: 320px;">
+          <canvas id="types-chart"></canvas>
+        </div>
+      </section>
+
+      <section class="card card--flat chart-panel">
+        <header class="card__header"
+          style="display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4);">
           <div>
             <h3 class="card__title" id="risky-title">Repository Exposure Profile</h3>
             <p class="card__subtitle" id="risky-subtitle">Top repositories by active secret exposures</p>
           </div>
-          <button id="risky-reset" class="btn btn--ghost btn--sm is-hidden" style="flex-shrink: 0; padding: var(--space-2) var(--space-3); font-weight: 600; border: 1px solid var(--border);">← Back to Severity</button>
+          <button id="risky-reset" class="btn btn--ghost btn--sm is-hidden"
+            style="flex-shrink: 0; padding: var(--space-2) var(--space-3); font-weight: 600; border: 1px solid var(--border);">←
+            Back to Severity</button>
         </header>
         <div id="risky-empty" class="chart-state is-hidden">No active secret data.</div>
         <div id="risky-chart-wrap" class="chart-panel__canvas">
@@ -77,17 +91,6 @@
 
       <section class="card card--flat chart-panel">
         <header class="card__header">
-          <h3 class="card__title">Secret Type Distribution</h3>
-          <p class="card__subtitle">Active secret exposures by type</p>
-        </header>
-        <div id="types-empty" class="chart-state is-hidden">No active secret data.</div>
-        <div id="types-chart-wrap" class="chart-panel__canvas" style="position: relative; height: 320px;">
-          <canvas id="types-chart"></canvas>
-        </div>
-      </section>
-
-      <section class="card card--flat chart-panel">
-        <header class="card__header">
           <h3 class="card__title">Alert Status Distribution</h3>
           <p class="card__subtitle">Active secret exposures by notification state</p>
         </header>
@@ -103,5 +106,5 @@
 {% block scripts %}
 <script src="/static/js/faceted-filter.js?v=1.0.1"></script>
 <script src="/static/js/findings-filters.js?v=1.0.1"></script>
-<script src="/static/js/dashboard.js?v=1.0.5"></script>
+<script src="/static/js/dashboard.js?v=1.0.15"></script>
 {% endblock %}
