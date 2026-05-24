@@ -106,7 +106,54 @@
       window.trendChartInstance.destroy();
     }
 
+    // Tailwind-based border colors [Total, Critical, High, Medium, Low]
+    const MAT_BORDER = ["#3b82f6", "#ef4444", "#f97316", "#eab308", "#22c55e"];
+    // RGB components matching each border color (used for gradient stops)
+    const MAT_RGB    = ["59,130,246", "239,68,68", "249,115,22", "234,179,8", "34,197,94"];
+
+    // Build vertical canvas gradients for each dataset
+    function makeGradient(ctx2d, chartArea, rgb, alphaTop, alphaBottom) {
+      const gradient = ctx2d.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+      gradient.addColorStop(0,   `rgba(${rgb},${alphaTop})`);
+      gradient.addColorStop(0.5, `rgba(${rgb},${(alphaTop + alphaBottom) / 2})`);
+      gradient.addColorStop(1,   `rgba(${rgb},${alphaBottom})`);
+      return gradient;
+    }
+
+    // Flat fallback colors used before the chart has rendered its first frame
+    // (canvas gradients require chartArea which is only available post-render)
+    const MAT_DEFAULT = MAT_RGB.map(rgb => `rgba(${rgb},0.28)`);
+    const MAT_BRIGHT  = [
+      `rgba(${MAT_RGB[0]},0.38)`,
+      ...MAT_RGB.slice(1).map(rgb => `rgba(${rgb},0.55)`)
+    ];
+    const MAT_DIM     = MAT_RGB.map(rgb => `rgba(${rgb},0.05)`);
+
+    // Gradient config per dataset [alphaTop, alphaBottom]
+    const GRAD_STOPS = [
+      [0.55, 0.02],   // Total Secrets  – deep blue fade
+      [0.60, 0.02],   // Critical       – vivid red fade
+      [0.55, 0.02],   // High           – orange fade
+      [0.50, 0.02],   // Medium         – yellow fade
+      [0.50, 0.02],   // Low            – green fade
+    ];
+
+    // Plugin that replaces flat backgroundColor with a fresh gradient on every draw
+    const gradientPlugin = {
+      id: "trendGradientFill",
+      beforeDraw(chart) {
+        const { ctx: ctx2d, chartArea } = chart;
+        if (!chartArea) return;
+        chart.data.datasets.forEach((ds, i) => {
+          // Only replace if currently a flat colour (string) or rebuild each frame
+          const [aTop, aBot] = GRAD_STOPS[i] || [0.4, 0.02];
+          ds.backgroundColor = makeGradient(ctx2d, chartArea, MAT_RGB[i], aTop, aBot);
+        });
+      },
+    };
+
     window.trendChartInstance = new Chart(canvas, {
+      plugins: [gradientPlugin],
       type: "line",
       data: {
         labels: data.map((d) => d.date),
@@ -114,43 +161,60 @@
           {
             label: "Total Secrets",
             data: data.map((d) => d.total),
-            borderColor: "#3b82f6",
-            borderWidth: 3,
-            tension: 0.35,
+            borderColor: MAT_BORDER[0],
+            backgroundColor: MAT_DEFAULT[0],
+            fill: true,
+            borderWidth: 2.5,
+            tension: 0.42,
             pointRadius: 4,
-            pointBackgroundColor: colors.card,
+            pointHoverRadius: 6,
+            pointBackgroundColor: "#1e3a5f",   // original dark navy dot fill
+            pointBorderColor: MAT_BORDER[0],
+            pointBorderWidth: 2,
           },
           {
             label: "Critical",
             data: data.map((d) => d.critical),
-            borderColor: "#ef4444",
+            borderColor: MAT_BORDER[1],
+            backgroundColor: MAT_DEFAULT[1],
+            fill: true,
             borderWidth: 2,
-            tension: 0.35,
+            tension: 0.42,
             pointRadius: 0,
+            pointHoverRadius: 4,
           },
           {
             label: "High",
             data: data.map((d) => d.high),
-            borderColor: "#f97316",
+            borderColor: MAT_BORDER[2],
+            backgroundColor: MAT_DEFAULT[2],
+            fill: true,
             borderWidth: 2,
-            tension: 0.35,
+            tension: 0.42,
             pointRadius: 0,
+            pointHoverRadius: 4,
           },
           {
             label: "Medium",
             data: data.map((d) => d.medium),
-            borderColor: "#eab308",
+            borderColor: MAT_BORDER[3],
+            backgroundColor: MAT_DEFAULT[3],
+            fill: true,
             borderWidth: 2,
-            tension: 0.35,
+            tension: 0.42,
             pointRadius: 0,
+            pointHoverRadius: 4,
           },
           {
             label: "Low",
             data: data.map((d) => d.low),
-            borderColor: "#22c55e",
+            borderColor: MAT_BORDER[4],
+            backgroundColor: MAT_DEFAULT[4],
+            fill: true,
             borderWidth: 2,
-            tension: 0.35,
+            tension: 0.42,
             pointRadius: 0,
+            pointHoverRadius: 4,
           },
         ],
       },
@@ -175,28 +239,40 @@
             },
           },
         },
+        onHover: (event, _activeElements, chart) => {
+          const nearest = chart.getElementsAtEventForMode(
+            event.native || event,
+            "nearest",
+            { intersect: false },
+            false
+          );
+          const hoveredIdx = nearest && nearest.length > 0 ? nearest[0].datasetIndex : -1;
+
+          // Index 0 = Total Secrets (blue) — hovering it must NOT change the graph state
+          if (hoveredIdx > 0) {
+            chart.data.datasets.forEach((ds, i) => {
+              ds.backgroundColor = i === hoveredIdx ? MAT_BRIGHT[i] : MAT_DEFAULT[i];
+              ds.borderWidth = i === hoveredIdx ? 3 : (i === 0 ? 2.5 : 2);
+            });
+          } else {
+            // No hover OR hovering Total Secrets — keep/restore default
+            chart.data.datasets.forEach((ds, i) => {
+              ds.backgroundColor = MAT_DEFAULT[i];
+              ds.borderWidth = i === 0 ? 2.5 : 2;
+            });
+          }
+          chart.update("none");
+        },
         plugins: {
-          legend: { labels: { color: colors.tick, usePointStyle: true, padding: 16 } },
+          legend: { labels: { color: colors.tick, usePointStyle: true, pointStyle: "circle", padding: 16 } },
           tooltip: {
             usePointStyle: true,
             boxPadding: 6,
             callbacks: {
-              labelPointStyle: (ctx) => {
-                return {
-                  pointStyle: "circle",
-                  rotation: 0
-                };
-              },
+              labelPointStyle: () => ({ pointStyle: "circle", rotation: 0 }),
               labelColor: (ctx) => {
-                let bg = ctx.dataset.backgroundColor;
-                let border = ctx.dataset.borderColor;
-                if (Array.isArray(bg)) bg = bg[ctx.dataIndex];
-                if (Array.isArray(border)) border = border[ctx.dataIndex];
-                return {
-                  borderColor: border || "#3b82f6",
-                  backgroundColor: bg || border || "#3b82f6",
-                  borderWidth: 2,
-                };
+                const border = MAT_BORDER[ctx.datasetIndex] || "#2196F3";
+                return { borderColor: border, backgroundColor: border, borderWidth: 2 };
               },
               label: (ctx) => {
                 const n = ctx.parsed.y;
@@ -235,6 +311,16 @@
           },
         },
       },
+    });
+
+    // Guarantee reset when cursor leaves the canvas entirely —
+    // Chart.js onHover does not reliably fire on mouseleave.
+    canvas.addEventListener("mouseleave", () => {
+      window.trendChartInstance.data.datasets.forEach((ds, i) => {
+        ds.backgroundColor = MAT_DEFAULT[i];
+        ds.borderWidth = i === 0 ? 2.5 : 2;
+      });
+      window.trendChartInstance.update("none");
     });
   }
 
@@ -2016,4 +2102,43 @@
     refreshDashboard();
     fetchAndRenderScanStats();
   });
+
+  // ── Resize charts when sidebar open/close animation completes ──────
+  // The sidebar CSS transition is 300 ms.  After it ends the main-content
+  // has a new width; tell every Chart.js instance to resize so they fill
+  // the available space and never need horizontal scroll.
+  function resizeAllCharts() {
+    [
+      window.trendChartInstance,
+      window.riskyChartInstance,
+      window.typesChartInstance,
+      window.scansChartInstance,
+      window.alertsChartInstance,
+    ].forEach(function (chart) {
+      if (chart) {
+        chart.resize();
+      }
+    });
+  }
+
+  // Prefer ResizeObserver (fires after every layout change incl. sidebar anim)
+  const mainContent = document.querySelector(".main-content");
+  if (mainContent && typeof ResizeObserver !== "undefined") {
+    let roTimer;
+    const ro = new ResizeObserver(function () {
+      clearTimeout(roTimer);
+      roTimer = setTimeout(resizeAllCharts, 50);
+    });
+    ro.observe(mainContent);
+  } else {
+    // Fallback: listen for the sidebar's CSS transition end
+    const sidebarEl = document.getElementById("sidebar");
+    if (sidebarEl) {
+      sidebarEl.addEventListener("transitionend", function (e) {
+        if (e.propertyName === "transform" || e.propertyName === "width") {
+          resizeAllCharts();
+        }
+      });
+    }
+  }
 })();
