@@ -41,12 +41,17 @@ FINDINGS_QUERY = """
     LEFT JOIN secret_validations sv ON sv.secret_id = s.id
     LEFT JOIN v_secrets_alert_queue aq ON aq.secret_id = s.id
     WHERE replace(s.file_path, E'\\\\', '/') !~ '(^|/)\\.git(/|$)'
-    ORDER BY s.created_at DESC
+    ORDER BY sr.started_at DESC, s.created_at DESC
 """
 
 
 def _format_finding(item: dict) -> dict:
     scan_started = item.get("scan_started_at")
+    created = item.get("created_at")
+    
+    # Use the scan's start time for sorting in the UI so today's scans show at the top
+    display_time = scan_started if scan_started else created
+
     return {
         "id": item["id"],
         "tool": item.get("tool"),
@@ -55,7 +60,7 @@ def _format_finding(item: dict) -> dict:
         "severity": get_severity(item["risk_score"]),
         "riskScore": item.get("risk_score"),
         "status": item.get("secret_status"),
-        "time": item["created_at"].isoformat() if item.get("created_at") else None,
+        "time": display_time.isoformat() if display_time else None,
         "scanDate": scan_started.isoformat() if scan_started else None,
         "authorName": item.get("author_name"),
         "authorEmail": item.get("author_email"),
