@@ -71,12 +71,12 @@
   function renderSummary(s) {
     if (!summaryEl) return;
     summaryEl.innerHTML = `
-      <article class="stat-card">
-        <p class="stat-card__label">needs_initial</p>
+      <article class="stat-card stat-card--needs-initial stat-card--interactive" onclick="window.location.href='?status=needs_initial'">
+        <p class="stat-card__label">Needs Initial Mail</p>
         <p class="stat-card__value">${s.needs_initial ?? 0}</p>
       </article>
-      <article class="stat-card">
-        <p class="stat-card__label">needs_reminder</p>
+      <article class="stat-card stat-card--needs-reminder stat-card--interactive" onclick="window.location.href='?status=needs_reminder'">
+        <p class="stat-card__label">Needs Reminder</p>
         <p class="stat-card__value">${s.needs_reminder ?? 0}</p>
       </article>`;
   }
@@ -120,7 +120,13 @@
             return `<td><span class="badge ${statusClass(row.secret_status)}">${escapeHtml(row.secret_status)}</span></td>`;
           }
           if (col.key === "alert_state" && row.alert_state) {
-            return `<td><span class="scan-status scan-status--unknown">${escapeHtml(row.alert_state)}</span></td>`;
+            let stateClass = "scan-status--unknown";
+            if (row.alert_state === "needs_initial") stateClass = "scan-status--needs-initial";
+            else if (row.alert_state === "needs_reminder") stateClass = "scan-status--needs-reminder";
+            else if (row.alert_state === "waiting") stateClass = "scan-status--waiting";
+            
+            const labelText = row.alert_state.replace("_", " ");
+            return `<td><span class="scan-status ${stateClass}">${escapeHtml(labelText)}</span></td>`;
           }
           return `<td class="${cls}">${escapeHtml(text)}</td>`;
         }).join("");

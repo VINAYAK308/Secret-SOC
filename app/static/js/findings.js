@@ -28,7 +28,7 @@
   });
 
   const originalOpenPopover = facetedFilter.openPopover.bind(facetedFilter);
-  facetedFilter.openPopover = function() {
+  facetedFilter.openPopover = function () {
     closeSortPopover();
     originalOpenPopover();
   };
@@ -40,7 +40,7 @@
   };
 
   const originalUpdateFilterUI = facetedFilter.updateFilterUI.bind(facetedFilter);
-  facetedFilter.updateFilterUI = function() {
+  facetedFilter.updateFilterUI = function () {
     originalUpdateFilterUI();
 
     const activeFiltersEl = document.getElementById("findings-active-filters");

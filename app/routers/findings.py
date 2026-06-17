@@ -1,6 +1,6 @@
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from app.database import get_connection
@@ -32,9 +32,11 @@ FINDINGS_QUERY = """
         sv.risk_score,
         sv.reasoning,
         sv.evidence,
-        aq.alert_state
+        aq.alert_state,
+        sr.started_at AS scan_started_at
     FROM secrets s
     LEFT JOIN repositories r ON s.repo_id = r.id
+    LEFT JOIN scan_runs sr ON sr.id = s.scan_run_id
     LEFT JOIN secret_git_metadata gm ON gm.secret_id = s.id
     LEFT JOIN secret_validations sv ON sv.secret_id = s.id
     LEFT JOIN v_secrets_alert_queue aq ON aq.secret_id = s.id
@@ -44,6 +46,7 @@ FINDINGS_QUERY = """
 
 
 def _format_finding(item: dict) -> dict:
+    scan_started = item.get("scan_started_at")
     return {
         "id": item["id"],
         "tool": item.get("tool"),
@@ -53,6 +56,7 @@ def _format_finding(item: dict) -> dict:
         "riskScore": item.get("risk_score"),
         "status": item.get("secret_status"),
         "time": item["created_at"].isoformat() if item.get("created_at") else None,
+        "scanDate": scan_started.isoformat() if scan_started else None,
         "authorName": item.get("author_name"),
         "authorEmail": item.get("author_email"),
         "committerName": item.get("committer_name"),
@@ -133,26 +137,42 @@ def findings_stats():
 
 
 @router.get("/trend", dependencies=[Depends(get_current_user)])
-def findings_trend():
-    query = """
+def findings_trend(repos: Optional[str] = Query(None)):
+    """
+    Returns one row per scan date (DATE(scan_runs.started_at)).
+    Scans with zero secrets show total=0 so the chart always has a data point.
+    Optional ?repos=repo1,repo2 filters to specific repositories.
+    """
+    repo_list = [r.strip() for r in repos.split(",") if r.strip()] if repos else []
+
+    # Build optional WHERE clause for repo filter
+    repo_clause = "AND r.name = ANY(%(repos)s)" if repo_list else ""
+
+    query = f"""
         SELECT
-            DATE(s.created_at) AS date,
+            DATE(sr.started_at) AS date,
             COUNT(s.id) AS total,
-            COUNT(CASE WHEN sv.risk_score >= 9 THEN 1 END) AS critical,
-            COUNT(CASE WHEN sv.risk_score >= 7 AND sv.risk_score < 9 THEN 1 END) AS high,
-            COUNT(CASE WHEN sv.risk_score >= 4 AND sv.risk_score < 7 THEN 1 END) AS medium,
-            COUNT(CASE WHEN sv.risk_score IS NULL OR sv.risk_score < 4 THEN 1 END) AS low
-        FROM secrets s
+            COUNT(CASE WHEN s.id IS NOT NULL AND sv.risk_score >= 9 THEN 1 END) AS critical,
+            COUNT(CASE WHEN s.id IS NOT NULL AND sv.risk_score >= 7 AND sv.risk_score < 9 THEN 1 END) AS high,
+            COUNT(CASE WHEN s.id IS NOT NULL AND sv.risk_score >= 4 AND sv.risk_score < 7 THEN 1 END) AS medium,
+            COUNT(CASE WHEN s.id IS NOT NULL AND (sv.risk_score IS NULL OR sv.risk_score < 4) THEN 1 END) AS low
+        FROM scan_runs sr
+        LEFT JOIN repositories r ON r.id = sr.repo_id
+        LEFT JOIN secrets s
+               ON s.scan_run_id = sr.id
+              AND replace(s.file_path, E'\\\\', '/') !~ '(^|/)\\.git(/|$)'
         LEFT JOIN secret_validations sv ON sv.secret_id = s.id
-        WHERE replace(s.file_path, E'\\\\', '/') !~ '(^|/)\\.git(/|$)'
-        GROUP BY DATE(s.created_at)
+        WHERE sr.status = 'completed'
+        {repo_clause}
+        GROUP BY DATE(sr.started_at)
         ORDER BY date ASC
-        LIMIT 30
+        LIMIT 60
     """
     try:
+        params = {"repos": repo_list} if repo_list else {}
         with get_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(query)
+                cur.execute(query, params)
                 rows = cur.fetchall()
 
         formatted = []

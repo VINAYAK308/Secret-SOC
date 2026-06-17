@@ -253,8 +253,9 @@ window.FindingsFilters = {
     const byDate = new Map();
 
     for (const item of filtered) {
-      if (!item.time) continue;
-      const d = new Date(item.time);
+      const dateStr = item.scanDate || item.time;
+      if (!dateStr) continue;
+      const d = new Date(dateStr);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       if (!byDate.has(key)) {
         byDate.set(key, { total: 0, critical: 0, high: 0, medium: 0, low: 0 });

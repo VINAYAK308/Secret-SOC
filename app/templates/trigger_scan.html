@@ -21,30 +21,6 @@
     </form>
   </section>
 
-  <!-- Pipeline Stage Visualizer Container -->
-  <div id="pipeline-visualizer" class="card pipeline-card is-hidden" style="margin-block-start: var(--space-6);">
-    <header class="pipeline-card__header">
-      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; gap: var(--space-4);">
-        <div>
-          <h3 class="pipeline-card__title" id="pipeline-title">Pipeline Execution Monitor</h3>
-          <p class="pipeline-card__subtitle" id="pipeline-subtitle">Monitoring secret detection scan runs...</p>
-        </div>
-        <div class="pipeline-live-badge">
-          <span class="pipeline-live-badge__dot"></span>
-          <span class="pipeline-live-badge__text">LIVE MONITOR</span>
-        </div>
-      </div>
-    </header>
-
-    <div class="pipeline-steps" id="pipeline-steps-list">
-      <!-- Populated dynamically via JS -->
-    </div>
-
-    <div class="pipeline-console">
-      <div class="pipeline-console__header">CONSOLE OUTPUT LOGGER</div>
-      <pre class="pipeline-console__body" id="pipeline-console-log">[INFO] Pipeline telemetry interface initialized. Waiting for trigger...</pre>
-    </div>
-  </div>
 </div>
 {% endblock %}
 {% block scripts %}

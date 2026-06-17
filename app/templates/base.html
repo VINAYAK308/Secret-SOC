@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,6 +11,7 @@
   <link rel="stylesheet" href="/static/css/app.css?v=1.0.22" />
   {% block head %}{% endblock %}
 </head>
+
 <body class="app-body{% block body_class %}{% endblock %}">
   {% block sidebar %}{% include "partials/sidebar.html" %}{% endblock %}
   <div id="main-shell" class="main-shell{% block main_shell_class %}{% endblock %}">
@@ -25,4 +27,5 @@
   <script src="/static/js/sidebar.js"></script>
   {% block scripts %}{% endblock %}
 </body>
+
 </html>

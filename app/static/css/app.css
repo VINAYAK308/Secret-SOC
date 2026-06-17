@@ -201,6 +201,24 @@
   box-shadow: 0 -2px 10px rgba(71, 85, 105, 0.4);
 }
 
+.light .stat-card--needs-initial::after {
+  background: linear-gradient(90deg, #00acc1 0%, #00e5ff 100%);
+  box-shadow: 0 -1px 5px rgba(0, 172, 193, 0.2);
+}
+
+.light .stat-card--needs-initial:hover::after {
+  box-shadow: 0 -2px 10px rgba(0, 172, 193, 0.4);
+}
+
+.light .stat-card--needs-reminder::after {
+  background: linear-gradient(90deg, #3949ab 0%, #8c9eff 100%);
+  box-shadow: 0 -1px 5px rgba(57, 73, 171, 0.2);
+}
+
+.light .stat-card--needs-reminder:hover::after {
+  box-shadow: 0 -2px 10px rgba(57, 73, 171, 0.4);
+}
+
 .light .soc-input,
 .light .soc-select {
   background: var(--card);
@@ -452,6 +470,7 @@ body {
 
 /* On mobile the sidebar is an overlay — no padding offset needed */
 @media (max-width: 767px) {
+
   .main-shell,
   .main-shell--collapsed {
     padding-left: 0 !important;
@@ -466,7 +485,8 @@ body {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  overflow-x: hidden;   /* charts scale down — never force horizontal scroll */
+  overflow-x: hidden;
+  /* charts scale down — never force horizontal scroll */
   padding: var(--space-6);
   container-type: inline-size;
   container-name: main-content;
@@ -1151,6 +1171,48 @@ body {
   box-shadow: 0 -2px 10px rgba(71, 85, 105, 0.75);
 }
 
+.stat-card--needs-initial {
+  overflow: hidden;
+}
+
+.stat-card--needs-initial::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #006064 0%, #00bcd4 100%);
+  box-shadow: 0 -1px 6px rgba(0, 96, 100, 0.45);
+  transition: height var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
+}
+
+.stat-card--needs-initial:hover::after {
+  height: 6px;
+  box-shadow: 0 -2px 10px rgba(0, 96, 100, 0.75);
+}
+
+.stat-card--needs-reminder {
+  overflow: hidden;
+}
+
+.stat-card--needs-reminder::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #1a237e 0%, #3f51b5 100%);
+  box-shadow: 0 -1px 6px rgba(26, 35, 126, 0.45);
+  transition: height var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
+}
+
+.stat-card--needs-reminder:hover::after {
+  height: 6px;
+  box-shadow: 0 -2px 10px rgba(26, 35, 126, 0.75);
+}
+
 .stat-card__label {
   margin: 0;
   font-size: 0.6875rem;
@@ -1227,7 +1289,8 @@ body {
 
 .chart-panel {
   min-height: 20rem;
-  min-width: 0;   /* allow shrink inside CSS grid */
+  min-width: 0;
+  /* allow shrink inside CSS grid */
 }
 
 .chart-panel__canvas {
@@ -2747,6 +2810,24 @@ body {
   color: var(--danger);
   border-color: color-mix(in srgb, var(--danger) 40%, transparent);
   background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+
+.scan-status--needs-initial {
+  color: #06b6d4;
+  border-color: color-mix(in srgb, #06b6d4 40%, transparent);
+  background: color-mix(in srgb, #06b6d4 12%, transparent);
+}
+
+.scan-status--needs-reminder {
+  color: #6366f1;
+  border-color: color-mix(in srgb, #6366f1 40%, transparent);
+  background: color-mix(in srgb, #6366f1 12%, transparent);
+}
+
+.scan-status--waiting {
+  color: #10b981;
+  border-color: color-mix(in srgb, #10b981 40%, transparent);
+  background: color-mix(in srgb, #10b981 12%, transparent);
 }
 
 .scan-status--unknown {

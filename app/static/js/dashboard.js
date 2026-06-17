@@ -50,17 +50,17 @@
     const isLight = document.documentElement.classList.contains("light");
     if (isLight) {
       return {
-        critical: { bg: "rgba(239, 68, 68, 0.8)", border: "#b91c1c" },
-        high: { bg: "rgba(249, 115, 22, 0.8)", border: "#c2410c" },
-        medium: { bg: "rgba(234, 179, 8, 0.8)", border: "#a16207" },
-        low: { bg: "rgba(34, 197, 94, 0.8)", border: "#15803d" },
+        critical: { bg: "rgba(244, 67, 54, 0.8)", border: "transparent" },
+        high: { bg: "rgba(255, 152, 0, 0.8)", border: "transparent" },
+        medium: { bg: "rgba(255, 193, 7, 0.8)", border: "transparent" },
+        low: { bg: "rgba(76, 175, 80, 0.8)", border: "transparent" },
       };
     } else {
       return {
-        critical: { bg: "rgba(239, 68, 68, 0.45)", border: "#ef4444" },
-        high: { bg: "rgba(249, 115, 22, 0.45)", border: "#f97316" },
-        medium: { bg: "rgba(234, 179, 8, 0.45)", border: "#eab308" },
-        low: { bg: "rgba(34, 197, 94, 0.45)", border: "#22c55e" },
+        critical: { bg: "rgba(244, 67, 54, 0.45)", border: "transparent" },
+        high: { bg: "rgba(255, 152, 0, 0.45)", border: "transparent" },
+        medium: { bg: "rgba(255, 193, 7, 0.45)", border: "transparent" },
+        low: { bg: "rgba(76, 175, 80, 0.45)", border: "transparent" },
       };
     }
   }
@@ -80,12 +80,25 @@
     facetedFilter.updateFilterUI();
   }
 
-  function renderTrend(filtered) {
+  async function renderTrend(filtered) {
     const canvas = document.getElementById("trend-chart");
     const empty = document.getElementById("trend-empty");
     const chartWrap = document.getElementById("trend-chart-wrap");
 
-    const data = FindingsFilters.computeTrend(filtered);
+    // Build ?repos= query param from active repository filters
+    const repoParam = filters.repository.size > 0
+      ? "?repos=" + [...filters.repository].map(encodeURIComponent).join(",")
+      : "";
+
+    let data;
+    try {
+      const res = await SOCAuth.authFetch("/api/findings/trend" + repoParam);
+      if (!res.ok) throw new Error("trend fetch failed");
+      data = await res.json();
+    } catch (err) {
+      console.warn("Trend API failed, falling back to client computation:", err);
+      data = FindingsFilters.computeTrend(filtered);
+    }
 
     if (!data.length) {
       chartWrap.classList.add("is-hidden");
@@ -106,28 +119,28 @@
       window.trendChartInstance.destroy();
     }
 
-    // Tailwind-based border colors [Total, Critical, High, Medium, Low]
-    const MAT_BORDER = ["#3b82f6", "#ef4444", "#f97316", "#eab308", "#22c55e"];
+    // Material-based border colors [Total, Critical, High, Medium, Low]
+    const MAT_BORDER = ["#2196F3", "#F44336", "#FF9800", "#FFC107", "#4CAF50"];
     // RGB components matching each border color (used for gradient stops)
-    const MAT_RGB    = ["59,130,246", "239,68,68", "249,115,22", "234,179,8", "34,197,94"];
+    const MAT_RGB = ["33,150,243", "244,67,54", "255,152,0", "255,193,7", "76,175,80"];
 
     // Build vertical canvas gradients for each dataset
     function makeGradient(ctx2d, chartArea, rgb, alphaTop, alphaBottom) {
       const gradient = ctx2d.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-      gradient.addColorStop(0,   `rgba(${rgb},${alphaTop})`);
+      gradient.addColorStop(0, `rgba(${rgb},${alphaTop})`);
       gradient.addColorStop(0.5, `rgba(${rgb},${(alphaTop + alphaBottom) / 2})`);
-      gradient.addColorStop(1,   `rgba(${rgb},${alphaBottom})`);
+      gradient.addColorStop(1, `rgba(${rgb},${alphaBottom})`);
       return gradient;
     }
 
     // Flat fallback colors used before the chart has rendered its first frame
     // (canvas gradients require chartArea which is only available post-render)
     const MAT_DEFAULT = MAT_RGB.map(rgb => `rgba(${rgb},0.28)`);
-    const MAT_BRIGHT  = [
+    const MAT_BRIGHT = [
       `rgba(${MAT_RGB[0]},0.38)`,
       ...MAT_RGB.slice(1).map(rgb => `rgba(${rgb},0.55)`)
     ];
-    const MAT_DIM     = MAT_RGB.map(rgb => `rgba(${rgb},0.05)`);
+    const MAT_DIM = MAT_RGB.map(rgb => `rgba(${rgb},0.05)`);
 
     // Gradient config per dataset [alphaTop, alphaBottom]
     const GRAD_STOPS = [
@@ -168,7 +181,7 @@
             tension: 0.42,
             pointRadius: 4,
             pointHoverRadius: 6,
-            pointBackgroundColor: "#1e3a5f",   // original dark navy dot fill
+            pointBackgroundColor: "#1565C0",   // Material dark blue fill
             pointBorderColor: MAT_BORDER[0],
             pointBorderWidth: 2,
           },
@@ -392,8 +405,8 @@
               label: drilldownState.severity,
               data: drilldownData.map((d) => d.count),
               backgroundColor: sevColor.bg,
-              borderColor: sevColor.border,
-              borderWidth: 1,
+              borderColor: "transparent",
+              borderWidth: 0,
               borderRadius: 4,
             }
           ]
@@ -492,32 +505,32 @@
               label: "Low",
               data: data.map((d) => d.low),
               backgroundColor: severityColors.low.bg,
-              borderColor: severityColors.low.border,
-              borderWidth: 1,
+              borderColor: "transparent",
+              borderWidth: 0,
               borderRadius: 4,
             },
             {
               label: "Medium",
               data: data.map((d) => d.medium),
               backgroundColor: severityColors.medium.bg,
-              borderColor: severityColors.medium.border,
-              borderWidth: 1,
+              borderColor: "transparent",
+              borderWidth: 0,
               borderRadius: 4,
             },
             {
               label: "High",
               data: data.map((d) => d.high),
               backgroundColor: severityColors.high.bg,
-              borderColor: severityColors.high.border,
-              borderWidth: 1,
+              borderColor: "transparent",
+              borderWidth: 0,
               borderRadius: 4,
             },
             {
               label: "Critical",
               data: data.map((d) => d.critical),
               backgroundColor: severityColors.critical.bg,
-              borderColor: severityColors.critical.border,
-              borderWidth: 1,
+              borderColor: "transparent",
+              borderWidth: 0,
               borderRadius: 4,
             },
           ],
@@ -602,27 +615,27 @@
 
   function getDoughnutColors(count) {
     const isLight = document.documentElement.classList.contains("light");
-    // Vibrant glassmorphic colors
+    // Vibrant Material Design colors
     const colors = [
-      { bg: "rgba(59, 130, 246, 0.55)", border: "#3b82f6" },   // Blue
-      { bg: "rgba(139, 92, 246, 0.55)", border: "#8b5cf6" },  // Purple
-      { bg: "rgba(236, 72, 153, 0.55)", border: "#ec4899" },  // Pink
-      { bg: "rgba(20, 184, 166, 0.55)", border: "#14b8a6" },  // Teal
-      { bg: "rgba(245, 158, 11, 0.55)", border: "#f59e0b" },  // Amber
-      { bg: "rgba(34, 197, 94, 0.55)", border: "#22c55e" },   // Green
-      { bg: "rgba(99, 102, 241, 0.55)", border: "#6366f1" },  // Indigo
-      { bg: "rgba(239, 68, 68, 0.55)", border: "#ef4444" },   // Red
+      { bg: "rgba(33, 150, 243, 0.55)", border: "transparent" },   // Blue
+      { bg: "rgba(156, 39, 176, 0.55)", border: "transparent" },  // Purple
+      { bg: "rgba(233, 30, 99, 0.55)", border: "transparent" },   // Pink
+      { bg: "rgba(0, 150, 136, 0.55)", border: "transparent" },   // Teal
+      { bg: "rgba(255, 152, 0, 0.55)", border: "transparent" },   // Orange
+      { bg: "rgba(76, 175, 80, 0.55)", border: "transparent" },   // Green
+      { bg: "rgba(63, 81, 181, 0.55)", border: "transparent" },   // Indigo
+      { bg: "rgba(244, 67, 54, 0.55)", border: "transparent" },   // Red
     ];
 
     const colorsLight = [
-      { bg: "rgba(59, 130, 246, 0.8)", border: "#2563eb" },
-      { bg: "rgba(139, 92, 246, 0.8)", border: "#7c3aed" },
-      { bg: "rgba(236, 72, 153, 0.8)", border: "#db2777" },
-      { bg: "rgba(20, 184, 166, 0.8)", border: "#0d9488" },
-      { bg: "rgba(245, 158, 11, 0.8)", border: "#d97706" },
-      { bg: "rgba(34, 197, 94, 0.8)", border: "#16a34a" },
-      { bg: "rgba(99, 102, 241, 0.8)", border: "#4f46e5" },
-      { bg: "rgba(239, 68, 68, 0.8)", border: "#dc2626" },
+      { bg: "rgba(33, 150, 243, 0.8)", border: "transparent" },
+      { bg: "rgba(156, 39, 176, 0.8)", border: "transparent" },
+      { bg: "rgba(233, 30, 99, 0.8)", border: "transparent" },
+      { bg: "rgba(0, 150, 136, 0.8)", border: "transparent" },
+      { bg: "rgba(255, 152, 0, 0.8)", border: "transparent" },
+      { bg: "rgba(76, 175, 80, 0.8)", border: "transparent" },
+      { bg: "rgba(63, 81, 181, 0.8)", border: "transparent" },
+      { bg: "rgba(244, 67, 54, 0.8)", border: "transparent" },
     ];
 
     const activePalette = isLight ? colorsLight : colors;
@@ -671,7 +684,7 @@
             data: data.map((d) => d.count),
             backgroundColor: palette.map((p) => p.bg),
             borderColor: palette.map((p) => p.border),
-            borderWidth: 1,
+            borderWidth: 0,
             hoverOffset: 6,
           },
         ],
@@ -832,16 +845,16 @@
     const palette = data.map(d => {
       if (d.type === "needs_initial") {
         return isLight
-          ? { bg: "rgba(6, 182, 212, 0.85)", border: "#0891b2" } // Cyan
-          : { bg: "rgba(6, 182, 212, 0.55)", border: "#06b6d4" };
+          ? { bg: "rgba(0, 188, 212, 0.85)", border: "transparent" } // Cyan
+          : { bg: "rgba(0, 188, 212, 0.55)", border: "transparent" };
       } else if (d.type === "needs_reminder") {
         return isLight
-          ? { bg: "rgba(99, 102, 241, 0.85)", border: "#4f46e5" } // Indigo
-          : { bg: "rgba(99, 102, 241, 0.55)", border: "#6366f1" };
+          ? { bg: "rgba(63, 81, 181, 0.85)", border: "transparent" } // Indigo
+          : { bg: "rgba(63, 81, 181, 0.55)", border: "transparent" };
       } else {
         return isLight
-          ? { bg: "rgba(16, 185, 129, 0.85)", border: "#059669" } // Emerald/Teal/Green
-          : { bg: "rgba(16, 185, 129, 0.55)", border: "#10b981" };
+          ? { bg: "rgba(76, 175, 80, 0.85)", border: "transparent" } // Green
+          : { bg: "rgba(76, 175, 80, 0.55)", border: "transparent" };
       }
     });
 
@@ -856,7 +869,7 @@
             data: data.map((d) => d.count),
             backgroundColor: palette.map((p) => p.bg),
             borderColor: palette.map((p) => p.border),
-            borderWidth: 1,
+            borderWidth: 0,
             hoverOffset: 6,
           },
         ],
@@ -1020,25 +1033,25 @@
             {
               label: "Completed",
               data: completedData,
-              backgroundColor: isLight ? "rgba(34, 197, 94, 0.8)" : "rgba(34, 197, 94, 0.45)",
-              borderColor: isLight ? "#16a34a" : "#22c55e",
-              borderWidth: 1,
+              backgroundColor: isLight ? "rgba(76, 175, 80, 0.8)" : "rgba(76, 175, 80, 0.45)",
+              borderColor: "transparent",
+              borderWidth: 0,
               borderRadius: 4,
             },
             {
               label: "Failed",
               data: failedData,
-              backgroundColor: isLight ? "rgba(239, 68, 68, 0.8)" : "rgba(239, 68, 68, 0.45)",
-              borderColor: isLight ? "#dc2626" : "#ef4444",
-              borderWidth: 1,
+              backgroundColor: isLight ? "rgba(244, 67, 54, 0.8)" : "rgba(244, 67, 54, 0.45)",
+              borderColor: "transparent",
+              borderWidth: 0,
               borderRadius: 4,
             },
             {
               label: "Running",
               data: runningData,
-              backgroundColor: isLight ? "rgba(245, 158, 11, 0.8)" : "rgba(245, 158, 11, 0.45)",
-              borderColor: isLight ? "#d97706" : "#f59e0b",
-              borderWidth: 1,
+              backgroundColor: isLight ? "rgba(255, 193, 7, 0.8)" : "rgba(255, 193, 7, 0.45)",
+              borderColor: "transparent",
+              borderWidth: 0,
               borderRadius: 4,
             },
           ],

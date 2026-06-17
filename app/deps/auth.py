@@ -37,7 +37,4 @@ def require_admin(user: Annotated[dict, Depends(get_current_user)]) -> dict:
     return user
 
 
-def require_reviewer_or_admin(
-    user: Annotated[dict, Depends(get_current_user)],
-) -> dict:
-    return user
+
