@@ -48,7 +48,7 @@ CREATE INDEX IF NOT EXISTS idx_scan_runs_status  ON scan_runs(status);
 CREATE TABLE IF NOT EXISTS secrets (
     id            SERIAL PRIMARY KEY,
     repo_id       INTEGER     NOT NULL REFERENCES repositories(id) ON DELETE CASCADE,
-    scan_run_id   INTEGER     NOT NULL REFERENCES scan_runs(id)    ON DELETE CASCADE,
+    scan_run_id   INTEGER              REFERENCES scan_runs(id)    ON DELETE CASCADE,
 
     tool          TEXT        NOT NULL,
     secret_type   TEXT,
