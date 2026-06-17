@@ -283,25 +283,21 @@ def finding_history(finding_id: int):
                     raise HTTPException(status_code=404, detail="Finding not found")
 
                 cur.execute(
-                    """
-                    SELECT old_status, new_status, changed_by, change_reason, changed_at
-                    FROM secret_status_history
-                    WHERE secret_id = %s
-                    ORDER BY changed_at DESC
-                    """,
-                    (finding_id,),
+                    "SELECT secret_status, created_at FROM secrets WHERE id = %s",
+                    (finding_id,)
                 )
-                rows = cur.fetchall()
+                secret_row = cur.fetchone()
 
+        # Since secret_status_history was removed from production, 
+        # we return a single synthetic event representing the current state.
         return [
             {
-                "oldStatus": r["old_status"],
-                "newStatus": r["new_status"],
-                "changedBy": r["changed_by"],
-                "changeReason": r["change_reason"],
-                "changedAt": r["changed_at"].isoformat() if r["changed_at"] else None,
+                "oldStatus": "NEW",
+                "newStatus": secret_row["secret_status"],
+                "changedBy": "System",
+                "changeReason": "Initial discovery",
+                "changedAt": secret_row["created_at"].isoformat() if secret_row["created_at"] else None,
             }
-            for r in rows
         ]
     except HTTPException:
         raise
