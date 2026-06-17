@@ -153,56 +153,29 @@ def findings_trend(repos: Optional[str] = Query(None)):
     repo_clause = "AND r.name = ANY(%(repos)s)" if repo_list else ""
 
     query = f"""
-        SELECT * FROM (
-            SELECT
-                scan_date AS date,
-            SUM(total)    AS total,
-            SUM(critical) AS critical,
-            SUM(high)     AS high,
-            SUM(medium)   AS medium,
-            SUM(low)      AS low
+        SELECT 
+            scan_date AS date,
+            COUNT(id) AS total,
+            COUNT(CASE WHEN risk_score >= 9 THEN 1 END) AS critical,
+            COUNT(CASE WHEN risk_score >= 7 AND risk_score < 9 THEN 1 END) AS high,
+            COUNT(CASE WHEN risk_score >= 4 AND risk_score < 7 THEN 1 END) AS medium,
+            COUNT(CASE WHEN risk_score < 4 OR risk_score IS NULL THEN 1 END) AS low
         FROM (
-            -- Branch 1: secrets linked to a completed scan_run
-            SELECT
-                DATE(sr.started_at) AS scan_date,
-                COUNT(s.id)  AS total,
-                COUNT(CASE WHEN s.id IS NOT NULL AND sv.risk_score >= 9                        THEN 1 END) AS critical,
-                COUNT(CASE WHEN s.id IS NOT NULL AND sv.risk_score >= 7 AND sv.risk_score < 9  THEN 1 END) AS high,
-                COUNT(CASE WHEN s.id IS NOT NULL AND sv.risk_score >= 4 AND sv.risk_score < 7  THEN 1 END) AS medium,
-                COUNT(CASE WHEN s.id IS NOT NULL AND sv.risk_score < 4                         THEN 1 END) AS low
-            FROM scan_runs sr
-            LEFT JOIN repositories r ON r.id = sr.repo_id
-            LEFT JOIN secrets s
-                   ON s.scan_run_id = sr.id
-                  AND replace(s.file_path, E'\\\\', '/') !~ '(^|/)\\.git(/|$)'
-            LEFT JOIN secret_validations sv ON sv.secret_id = s.id
-            WHERE sr.status = 'completed'
-            {repo_clause}
-            GROUP BY DATE(sr.started_at)
-
-            UNION ALL
-
-            -- Branch 2: secrets NOT linked to any scan_run (direct pipeline inserts)
-            SELECT
-                DATE(s.created_at) AS scan_date,
-                COUNT(s.id)  AS total,
-                COUNT(CASE WHEN sv.risk_score >= 9                        THEN 1 END) AS critical,
-                COUNT(CASE WHEN sv.risk_score >= 7 AND sv.risk_score < 9  THEN 1 END) AS high,
-                COUNT(CASE WHEN sv.risk_score >= 4 AND sv.risk_score < 7  THEN 1 END) AS medium,
-                COUNT(CASE WHEN sv.risk_score < 4                         THEN 1 END) AS low
+            SELECT 
+                s.id,
+                DATE(COALESCE(sr.started_at, s.created_at)) AS scan_date,
+                sv.risk_score
             FROM secrets s
+            LEFT JOIN scan_runs sr ON sr.id = s.scan_run_id
             LEFT JOIN repositories r ON r.id = s.repo_id
             LEFT JOIN secret_validations sv ON sv.secret_id = s.id
-            WHERE s.scan_run_id IS NULL
-              AND replace(s.file_path, E'\\\\', '/') !~ '(^|/)\\.git(/|$)'
-              {'AND r.name = ANY(%(repos)s)' if repo_list else ''}
-            GROUP BY DATE(s.created_at)
+            WHERE replace(s.file_path, E'\\\\', '/') !~ '(^|/)\\.git(/|$)'
+              {repo_clause}
+            ORDER BY COALESCE(sr.started_at, s.created_at) DESC
+            LIMIT 100
         ) sub
         GROUP BY scan_date
-        ORDER BY scan_date DESC
-        LIMIT 60
-    ) last_60
-    ORDER BY scan_date ASC
+        ORDER BY scan_date ASC
     """
     try:
         params = {"repos": repo_list} if repo_list else {}
