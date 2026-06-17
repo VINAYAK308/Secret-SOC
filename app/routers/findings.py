@@ -153,8 +153,9 @@ def findings_trend(repos: Optional[str] = Query(None)):
     repo_clause = "AND r.name = ANY(%(repos)s)" if repo_list else ""
 
     query = f"""
-        SELECT
-            scan_date AS date,
+        SELECT * FROM (
+            SELECT
+                scan_date AS date,
             SUM(total)    AS total,
             SUM(critical) AS critical,
             SUM(high)     AS high,
@@ -198,8 +199,10 @@ def findings_trend(repos: Optional[str] = Query(None)):
             GROUP BY DATE(s.created_at)
         ) sub
         GROUP BY scan_date
-        ORDER BY scan_date ASC
+        ORDER BY scan_date DESC
         LIMIT 60
+    ) last_60
+    ORDER BY scan_date ASC
     """
     try:
         params = {"repos": repo_list} if repo_list else {}
