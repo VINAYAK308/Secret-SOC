@@ -148,28 +148,27 @@
     };
 
     filtered.sort((a, b) => {
+      // Helper: get the best available date for sorting
+      // Prefer scanDate (when the scan ran) over time (created_at)
+      const getTs = (item) => {
+        const d = item.scanDate || item.time;
+        return d ? new Date(d).getTime() : 0;
+      };
+
       if (currentSort === "severity_desc") {
         const wA = severityWeight[(a.severity || "").toLowerCase()] || 0;
         const wB = severityWeight[(b.severity || "").toLowerCase()] || 0;
         if (wB !== wA) return wB - wA;
-        const tA = a.time ? new Date(a.time).getTime() : 0;
-        const tB = b.time ? new Date(b.time).getTime() : 0;
-        return tB - tA;
+        return getTs(b) - getTs(a);
       } else if (currentSort === "severity_asc") {
         const wA = severityWeight[(a.severity || "").toLowerCase()] || 0;
         const wB = severityWeight[(b.severity || "").toLowerCase()] || 0;
         if (wA !== wB) return wA - wB;
-        const tA = a.time ? new Date(a.time).getTime() : 0;
-        const tB = b.time ? new Date(b.time).getTime() : 0;
-        return tB - tA;
+        return getTs(b) - getTs(a);
       } else if (currentSort === "date_asc") {
-        const tA = a.time ? new Date(a.time).getTime() : 0;
-        const tB = b.time ? new Date(b.time).getTime() : 0;
-        return tA - tB;
-      } else { // "date_desc"
-        const tA = a.time ? new Date(a.time).getTime() : 0;
-        const tB = b.time ? new Date(b.time).getTime() : 0;
-        return tB - tA;
+        return getTs(a) - getTs(b);
+      } else { // "date_desc" — newest scan first
+        return getTs(b) - getTs(a);
       }
     });
 
