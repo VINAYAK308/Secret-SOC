@@ -39,7 +39,6 @@ window.FindingsFilters = {
           { value: "OPEN", label: "OPEN" },
           { value: "IN_PROGRESS", label: "IN_PROGRESS" },
           { value: "RESOLVED", label: "RESOLVED" },
-          { value: "ACCEPTED_RISK", label: "ACCEPTED_RISK" },
         ],
       },
       {
