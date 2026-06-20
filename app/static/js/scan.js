@@ -17,12 +17,17 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const repoUrl = document.getElementById("repo-url").value.trim();
+    const repoName = document.getElementById("repo-name").value.trim();
     const branchesRaw = document.getElementById("branches").value.trim();
     const branches = branchesRaw
       ? branchesRaw.split(",").map((b) => b.trim()).filter(Boolean)
       : [];
 
     if (!repoUrl) return;
+    if (!repoName) {
+      alert("Repository Name is required.");
+      return;
+    }
 
     submitBtn.disabled = true;
     stopPoll();
@@ -35,7 +40,7 @@
     try {
       const res = await SOCAuth.authFetch("/api/scan/trigger", {
         method: "POST",
-        body: JSON.stringify({ repoUrl, branches }),
+        body: JSON.stringify({ repoUrl, repoName, branches }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -83,7 +88,7 @@
       }
     };
     tick();
-    pollTimer = setInterval(tick, 2000); // Poll every 2 seconds for high responsiveness
+    pollTimer = setInterval(tick, 2000);
   }
 
   function renderPipeline(stages, status) {
@@ -95,11 +100,10 @@
       `[INFO] Target Repository Verified: ${document.getElementById("repo-url").value}`
     ];
 
-    stages.forEach((stg, idx) => {
+    stages.forEach((stg) => {
       const isCompleted = stg.status === "completed";
-      const isRunning = stg.status === "running";
-      const isFailed = stg.status === "failed";
-      const isPending = stg.status === "pending";
+      const isRunning   = stg.status === "running";
+      const isFailed    = stg.status === "failed";
 
       let classAttr = "pipeline-step";
       let icon = "";
@@ -118,10 +122,13 @@
         logLines.push(`[FATAL] Stage [${stg.name}] failed! Exception occurred.`);
       } else {
         classAttr += " pipeline-step--pending";
-        icon = `<span style="width: 6px; height: 6px; background: var(--border); border-radius: 50%;"></span>`;
+        icon = `<span style="width:6px;height:6px;background:var(--border);border-radius:50%;"></span>`;
       }
 
-      const badgeText = isCompleted ? (stg.time || "Done") : isRunning ? "Active" : isFailed ? "Failed" : "Pending";
+      const badgeText = isCompleted ? (stg.time || "Done")
+                      : isRunning   ? "Active"
+                      : isFailed    ? "Failed"
+                      : "Pending";
 
       html += `
         <div class="${classAttr}">

@@ -13,12 +13,26 @@
         <input id="repo-url" type="url" class="soc-input" required placeholder="https://github.com/org/repo.git" autocomplete="off" />
       </div>
       <div class="form-field">
+        <label class="form-label" for="repo-name">Repository Name <span class="form-label__required">*</span></label>
+        <input id="repo-name" type="text" class="soc-input" required placeholder="e.g. my-repo" autocomplete="off" />
+        <p class="form-hint">Short name used to identify this repository in the pipeline.</p>
+      </div>
+      <div class="form-field">
         <label class="form-label" for="branches">Target Branches</label>
         <input id="branches" type="text" class="soc-input" placeholder="main, develop (comma separated)" autocomplete="off" />
         <p class="form-hint">Leave blank to scan the default branch.</p>
       </div>
       <button id="scan-submit" type="submit" class="btn btn--primary">Start Scan</button>
     </form>
+  </section>
+
+  <section id="pipeline-visualizer" class="card card--flat is-hidden" style="margin-top:1rem;">
+    <h3 id="pipeline-title" class="card-title" style="padding:1rem 1.25rem 0;">Pipeline Execution Monitor</h3>
+    <div id="pipeline-steps-list" style="padding:0.75rem 1.25rem;"></div>
+    <pre id="pipeline-console-log"
+      style="background:var(--surface-2,#111);color:var(--text-muted,#aaa);font-size:0.75rem;
+             padding:1rem;margin:0 1.25rem 1.25rem;border-radius:6px;
+             max-height:200px;overflow-y:auto;white-space:pre-wrap;"></pre>
   </section>
 
 </div>
